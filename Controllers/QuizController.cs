@@ -1,0 +1,149 @@
+﻿using System;
+using Microsoft.AspNetCore.Mvc;
+using slowfit.DBModels;
+using slowfit.DTORequest;
+
+// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+
+namespace slowfit.Controllers
+{
+    [Route("slowFit/quiz")]
+    [ApiController]
+    public class QuizController(SlowFitContext slowFitCtx) : ControllerBase
+    {
+        private readonly SlowFitContext _slowFitContext = slowFitCtx;
+
+        // GET: api/Quiz
+        [HttpGet]
+        public ActionResult<IEnumerable<QuizUserRes>> GetQuizzes()
+        {
+            var quizList = new List<QuizUserRes>();
+            try
+            {
+
+                quizList = _slowFitContext.Quizzes.Select(q => new QuizUserRes
+                {
+                    QuizId = q.QuizId,
+                    QuestionId = q.QuestionId,
+                    Input = q.Input,
+                    InputTypeId = q.InputTypeId,
+                    SingleResponse = q.SingleResponse,                  
+                }).ToList();
+
+                if (quizList.Count == 0) return NoContent();
+
+                return Ok(quizList);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"An error occurred");
+            }
+        }
+
+        // GET: api/Quiz/5
+        [HttpGet("{id}")]
+        public ActionResult<QuizUserRes> GetQuiz(int id)
+        {
+            try
+            {
+                var quiz = _slowFitContext.Quizzes.Where(t => t.QuizId == id).FirstOrDefault();
+                if (quiz == null) return NotFound();
+                return Ok(quiz);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"No quiz found with {id}");
+            }
+        }
+
+
+        // POST: api/Quiz
+        [HttpPost]
+        public ActionResult<QuizUserRes> CreateQuiz([FromBody] QuizUserRes quizDto)
+        {
+
+            if (quizDto == null)
+            {
+                return BadRequest("Invalid request body.");
+            }
+
+            if (quizDto.QuestionId <= 0 || quizDto.InputTypeId <= 0)
+            {
+                return BadRequest();
+            }
+
+
+            try
+            {
+                var qz = new Quiz()
+                {
+                    QuestionId = quizDto.QuestionId,
+                    InputTypeId = quizDto.InputTypeId,
+                    Input = quizDto.Input,
+                    SingleResponse = quizDto.SingleResponse
+                    
+                };
+                _slowFitContext.Quizzes.Add(qz);
+                _slowFitContext.SaveChanges();
+                return Ok("Quiz created successfully.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Failed to create Quiz");
+            }
+        }
+
+        // PUT: api/Quiz/5
+        [HttpPut("{id}")]
+        public IActionResult UpdateQuiz(int id, [FromBody] QuizUserRes quizDto)
+        {
+            var quiz = _slowFitContext.Quizzes.Where(q => q.QuizId == id).FirstOrDefault();
+            if (quiz == null)
+            {
+                return NotFound();
+            }
+
+            quiz.QuestionId = quizDto.QuestionId;
+            quiz.InputTypeId = quizDto.InputTypeId;
+            quiz.Input = quizDto.Input;
+            quiz.SingleResponse = quizDto.SingleResponse;
+
+            try
+            {
+                _slowFitContext.Quizzes.Update(quiz);
+
+
+                _slowFitContext.SaveChanges();
+
+                return Ok("Quiz updated succesfully");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Failed to update quiz: {quiz.QuizId}");
+            }
+        }
+
+        // DELETE: api/Quiz/5
+        [HttpDelete("{id}")]
+        public IActionResult DeleteQuiz(int id)
+        {
+            var quiz = _slowFitContext.Quizzes.Where(q => q.QuizId == id).FirstOrDefault();
+            if (quiz == null)
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                _slowFitContext.Quizzes.Remove(quiz);
+                _slowFitContext.SaveChanges();
+
+                return Ok($"Quiz has been successfully cancelled");
+            }
+            catch (Exception ex) 
+            { 
+                return BadRequest($"No quiz found whit {id}"); 
+            }
+        }
+    }
+}
