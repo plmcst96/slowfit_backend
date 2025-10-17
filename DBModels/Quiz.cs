@@ -15,6 +15,8 @@ public partial class Quiz
 
     public bool SingleResponse { get; set; }
 
+    public string? Type { get; set; }
+
     public virtual InputType? InputType { get; set; }
 
     public virtual Question Question { get; set; } = null!;

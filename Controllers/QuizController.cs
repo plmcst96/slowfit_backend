@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using slowfit.DBModels;
 using slowfit.DTORequest;
+using slowfit.DTOResponse;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -13,30 +14,55 @@ namespace slowfit.Controllers
     {
         private readonly SlowFitContext _slowFitContext = slowFitCtx;
 
-        // GET: api/Quiz
+        // GET: slowFit/quiz?type=...
         [HttpGet]
-        public ActionResult<IEnumerable<QuizUserRes>> GetQuizzes()
+        public ActionResult<IEnumerable<QuizUserRes>> GetQuizzes([FromQuery] string? type)
         {
-            var quizList = new List<QuizUserRes>();
             try
             {
+                var query = _slowFitContext.Quizzes.AsQueryable();
 
-                quizList = _slowFitContext.Quizzes.Select(q => new QuizUserRes
+                // 🔹 Filtro per Type (QueryString)
+                if (!string.IsNullOrEmpty(type))
                 {
-                    QuizId = q.QuizId,
-                    QuestionId = q.QuestionId,
-                    Input = q.Input,
-                    InputTypeId = q.InputTypeId,
-                    SingleResponse = q.SingleResponse,                  
-                }).ToList();
+                    query = query.Where(q => q.Type == type);
+                }
+
+                // 🧮 Ordina: prima quelli senza input
+                query = query.OrderBy(q => q.Input)  // false (0) prima di true (1)
+                             .ThenBy(q => q.QuizId);
+
+                var quizList = query
+                    .Select(q => new QuizUserResponse
+                    {
+                        QuizId = q.QuizId,
+                        QuestionId = q.QuestionId,
+                        Input = q.Input,
+                        InputTypeId = q.InputTypeId,
+                        SingleResponse = q.SingleResponse,
+                        Type = q.Type,
+                        // 🔹 Recupero testo della domanda
+                        QuestionText = _slowFitContext.Questions
+                                    .Where(ques => ques.QuestionId == q.QuestionId)
+                                    .Select(ques => ques.QuestionString)
+                                    .FirstOrDefault(),
+                        // 🔽 Carico tutte le Answers legate al QuestionId
+                        Answers = _slowFitContext.Answers
+                                    .Where(a => a.QuestionId == q.QuestionId)
+                                    .Select(a => new AnswerRes
+                                    {
+                                        AnswerId = a.AnswerId,
+                                        AnswerString = a.AnswerString,
+                                    }).ToList()
+                    }).ToList();
 
                 if (quizList.Count == 0) return NoContent();
 
                 return Ok(quizList);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return BadRequest($"An error occurred");
+                return BadRequest("An error occurred");
             }
         }
 

@@ -14,6 +14,5 @@ namespace slowfit.DTORequest
 
         public bool SingleResponse { get; set; }
 
-      
-    }
+        public string? Type { get; set; } = null;    }
 }

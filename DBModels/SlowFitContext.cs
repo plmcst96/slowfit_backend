@@ -630,6 +630,10 @@ public partial class SlowFitContext : DbContext
             entity.Property(e => e.InputTypeId).HasColumnName("inputTypeId");
             entity.Property(e => e.QuestionId).HasColumnName("questionId");
             entity.Property(e => e.SingleResponse).HasColumnName("singleResponse");
+            entity.Property(e => e.Type)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasColumnName("type");
 
             entity.HasOne(d => d.InputType).WithMany(p => p.Quizzes)
                 .HasForeignKey(d => d.InputTypeId)
@@ -653,6 +657,10 @@ public partial class SlowFitContext : DbContext
 
             entity.Property(e => e.ResponseId).HasColumnName("responseId");
             entity.Property(e => e.AnswerId).HasColumnName("answerId");
+            entity.Property(e => e.AnswerString)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasColumnName("answerString");
             entity.Property(e => e.UserId).HasColumnName("userId");
 
             entity.HasOne(d => d.Answer).WithMany(p => p.ResponseQuizzes)

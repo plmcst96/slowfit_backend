@@ -20,12 +20,12 @@ namespace slowfit.Controllers
             try
             {
 
-                answerList = _slowFitContext.Answers.Select(p => new AnswerRes
+                answerList = [.. _slowFitContext.Answers.Select(p => new AnswerRes
                 {
                     AnswerId = p.AnswerId,
                     AnswerString = p.AnswerString,
                     QuestionId = p.QuestionId,
-                }).ToList();
+                })];
 
                 if (answerList.Count == 0) return NoContent();
 

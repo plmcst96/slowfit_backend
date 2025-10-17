@@ -22,7 +22,7 @@ namespace slowfit.Controllers
             try
             {
 
-                trainingList = _slowFitContext.Training.Select(t => new TrainingRes
+                trainingList = [.. _slowFitContext.Training.Select(t => new TrainingRes
                 {
                     EndDate = DateTime.Now,
                     TrainingId = t.TrainingId,
@@ -31,7 +31,7 @@ namespace slowfit.Controllers
                     UserId = t.TrainingId,
                     TypeId = t.TrainingId,
                     Duration = t.Duration
-                }).ToList();
+                })];
 
 
                 if (trainingList.Count == 0) return NoContent();

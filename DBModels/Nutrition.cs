@@ -17,7 +17,7 @@ public partial class Nutrition
 
     public string? CreationDate { get; set; }
 
-    public virtual ICollection<NutritionMeal> NutritionMeals { get; set; } = [];
+    public virtual ICollection<NutritionMeal> NutritionMeals { get; set; } = new List<NutritionMeal>();
 
     public virtual TypeNutrition TypeNutrition { get; set; } = null!;
 

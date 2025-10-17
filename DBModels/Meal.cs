@@ -31,7 +31,7 @@ public partial class Meal
 
     public virtual CategoryOfDay? Category { get; set; }
 
-    public virtual ICollection<MealIngredient> MealIngredients { get; set; } = [];
+    public virtual ICollection<MealIngredient> MealIngredients { get; set; } = new List<MealIngredient>();
 
-    public virtual ICollection<NutritionMeal> NutritionMeals { get; set; } = [];
+    public virtual ICollection<NutritionMeal> NutritionMeals { get; set; } = new List<NutritionMeal>();
 }

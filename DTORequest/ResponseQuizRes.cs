@@ -7,5 +7,7 @@
         public int AnswerId { get; set; }
 
         public int UserId { get; set; }
+
+        public string? AnswerString { get; set; }
     }
 }
