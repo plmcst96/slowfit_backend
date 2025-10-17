@@ -72,8 +72,30 @@ namespace slowfit.Controllers
         {
             try
             {
-                var quiz = _slowFitContext.Quizzes.Where(t => t.QuizId == id).FirstOrDefault();
-                if (quiz == null) return NotFound();
+                var quiz = _slowFitContext.Quizzes
+                    .Where(q => q.QuizId == id)
+                    .Select(q => new QuizUserResponse
+                    {
+                        QuizId = q.QuizId,
+                        QuestionId = q.QuestionId,
+                        Input = q.Input,
+                        InputTypeId = q.InputTypeId,
+                        SingleResponse = q.SingleResponse,
+                        Type = q.Type,
+                        QuestionText = q.Question.QuestionString, // assuming navigation property
+                        Answers = _slowFitContext.Answers
+                                    .Where(a => a.QuestionId == q.QuestionId)
+                                    .Select(a => new AnswerRes
+                                    {
+                                        AnswerId = a.AnswerId,
+                                        AnswerString = a.AnswerString,
+                                    }).ToList()
+                    })
+                    .FirstOrDefault();
+
+                if (quiz == null)
+                    return NotFound();
+
                 return Ok(quiz);
             }
             catch (Exception ex)
@@ -81,6 +103,7 @@ namespace slowfit.Controllers
                 return BadRequest($"No quiz found with {id}");
             }
         }
+
 
 
         // POST: api/Quiz
