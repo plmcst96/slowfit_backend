@@ -37,7 +37,7 @@ namespace slowfit.Controllers
 
                 return Ok(exerciseList);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"An error occurred");
             }
@@ -53,7 +53,7 @@ namespace slowfit.Controllers
                 if (exercise == null) return NotFound();
                 return Ok(exercise);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"No exercise found with {id}");
             }
@@ -84,7 +84,7 @@ namespace slowfit.Controllers
                 }
 
                 return Ok(exercises);
-            } catch(Exception ex)
+            } catch(Exception)
             {
                 return BadRequest($"No exercise found with location id {locationId}");
             }
@@ -115,7 +115,7 @@ namespace slowfit.Controllers
                 }
 
                 return Ok(exercises);
-            } catch(Exception ex)
+            } catch(Exception)
             {
                 return BadRequest($"No exercise found for type di {trainingId}");
             }
@@ -153,7 +153,7 @@ namespace slowfit.Controllers
                 _slowFitContext.SaveChanges();
                 return Ok("Exercise created successfully.");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to create exercise");
             }
@@ -181,7 +181,7 @@ namespace slowfit.Controllers
 
                 return Ok(new { message = "Exercise updated succesfully" });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to update Exercise: {updateExercise.Name}");
             }
@@ -201,7 +201,7 @@ namespace slowfit.Controllers
 
                 return Ok($"The exercise has been successfully cancelled");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"No exercise found whit {id}");
             }

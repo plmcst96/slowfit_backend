@@ -31,7 +31,7 @@ namespace slowfit.Controllers
 
                 return Ok(typeList);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"An error occurred");
             }
@@ -58,7 +58,7 @@ namespace slowfit.Controllers
 
                 return Ok(type);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest("An error occurred while retrieving the training type.");
             }
@@ -87,7 +87,7 @@ namespace slowfit.Controllers
                 _slowFitContext.SaveChanges();
                 return Ok("Type training created successfully.");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to create type");
             }
@@ -120,7 +120,7 @@ namespace slowfit.Controllers
 
                 return Ok("Training type updated succesfully");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to update type: {typeT.TypeName}");
             }
@@ -143,7 +143,7 @@ namespace slowfit.Controllers
                 _slowFitContext.SaveChanges();
                 return Ok("Type delete succesfully");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Error to delete plan {typeT.TypeName} ");
             }

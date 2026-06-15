@@ -34,7 +34,7 @@ namespace slowfit.Controllers
 
                 return Ok(responseList);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"An error occurred");
             };
@@ -50,7 +50,7 @@ namespace slowfit.Controllers
                 if (response == null) return NotFound();
                 return Ok(response);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"No response found with {id}");
             }
@@ -66,7 +66,7 @@ namespace slowfit.Controllers
                 if (response == null) return NotFound();
                 return Ok(response);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"No responses quiz found for {userId}");
             }
@@ -99,7 +99,7 @@ namespace slowfit.Controllers
                 _slowFitContext.SaveChanges();
                 return Ok("ResponseQuiz created successfully.");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to create response");
             }
@@ -123,7 +123,7 @@ namespace slowfit.Controllers
 
                 return Ok("ResponseQuiz updated succesfully");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to update response: {updateRes.ResponseId}");
             }
@@ -141,7 +141,7 @@ namespace slowfit.Controllers
                 _slowFitContext.SaveChanges();
                 return Ok("ResponseQuiz deleted successfully.");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to delete response: {id}");
             }

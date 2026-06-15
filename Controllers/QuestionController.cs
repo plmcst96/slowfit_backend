@@ -31,7 +31,7 @@ namespace slowfit.Controllers
 
                 return Ok(questionList);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"An error occurred");
             }
@@ -46,7 +46,7 @@ namespace slowfit.Controllers
                 if (question == null) return NotFound();
                 return Ok(question);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"No question found with {id}");
             }
@@ -75,7 +75,7 @@ namespace slowfit.Controllers
                 _slowFitContext.SaveChanges();
                 return Ok("Question created successfully.");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to create question");
             }
@@ -98,7 +98,7 @@ namespace slowfit.Controllers
 
                 return Ok("Question updated succesfully");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to update question: {updatedQuestion.QuestionId}");
             }
@@ -115,7 +115,7 @@ namespace slowfit.Controllers
                 _slowFitContext.SaveChanges();
                 return Ok("Question delete succesfully");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Error to delete question {id} ");
             }

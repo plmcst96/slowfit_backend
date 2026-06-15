@@ -34,7 +34,7 @@ namespace slowfit.Controllers
 
                 return Ok(orderList);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest( $"An error occurred");
             }
@@ -50,7 +50,7 @@ namespace slowfit.Controllers
                 if (order == null) return NotFound();
                 return Ok(order);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"No order found with {id}");
             }
@@ -65,7 +65,7 @@ namespace slowfit.Controllers
                 if (userOrder.Count == 0) return NotFound($"No trainings found for user {userId}.");
                 return Ok(userOrder);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest();
             }
@@ -99,7 +99,7 @@ namespace slowfit.Controllers
                 _slowFitContext.SaveChanges();
                 return Ok("Order created successfully.");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to create order");
             }
@@ -126,7 +126,7 @@ namespace slowfit.Controllers
 
                 return Ok("Order updated succesfully");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to update order: {orderBody.OrderId}");
             }
@@ -146,7 +146,7 @@ namespace slowfit.Controllers
 
                 return Ok($"The order has been successfully cancelled");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"No order found whit {id}");
             }

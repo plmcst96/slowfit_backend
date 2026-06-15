@@ -32,7 +32,7 @@ namespace slowfit.Controllers
                 if (ingredientList.Count == 0) return NoContent();
                 return Ok(ingredientList);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"An error occurred");
             }
@@ -84,7 +84,7 @@ namespace slowfit.Controllers
                 if (ingredient == null) return NotFound();
                 return Ok(ingredient);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest();
             }
@@ -119,7 +119,7 @@ namespace slowfit.Controllers
                 _slowFitContext.SaveChanges();
                 return Ok("Ingredient created succesfully");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to create ingredient");
             }
@@ -142,7 +142,7 @@ namespace slowfit.Controllers
                 _slowFitContext.SaveChanges();
                 return Ok("Ingredient updated succesfully");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to update ingredient: {id}");
             }
@@ -160,7 +160,7 @@ namespace slowfit.Controllers
                 _slowFitContext.SaveChanges();
                 return Ok("Ingredient deleted successfully");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to delete ingredient: {id}");
             }

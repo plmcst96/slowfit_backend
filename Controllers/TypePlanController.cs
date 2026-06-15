@@ -31,7 +31,7 @@ namespace slowfit.Controllers
 
                 return Ok(planList);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest( $"An error occurred");
             }
@@ -60,7 +60,7 @@ namespace slowfit.Controllers
                 _slowFitContext.SaveChanges();
                 return Ok("Plan created successfully.");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to create plan");
             }
@@ -94,7 +94,7 @@ namespace slowfit.Controllers
 
                 return Ok("Plan updated succesfully");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to update plan: {typeP.TypePlaneName}");
             }
@@ -117,7 +117,7 @@ namespace slowfit.Controllers
                 _slowFitContext.SaveChanges();
                 return Ok("Plan delete succesfully");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Error to delete plan {typeP.TypePlaneName} ");
             }

@@ -11,7 +11,7 @@ public partial class Measure
 
     public int Cm { get; set; }
 
-    public string CollectPeriod { get; set; } = null!;
+    public DateTime CollectPeriod { get; set; }
 
     public int UserId { get; set; }
 

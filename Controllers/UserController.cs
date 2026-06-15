@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using Microsoft.AspNetCore.Mvc;
+using slowfit.Auth;
 using slowfit.DBModels;
 using slowfit.DTORequest;
 using slowfit.DTOResponse;
@@ -18,6 +19,8 @@ namespace slowfit.Controllers
         [HttpGet]
         public IActionResult GetUsersByRole([FromQuery] int roleId)
         {
+            if (!User.IsPersonalTrainer()) return Forbid();
+
             try
             {
                 var role = _slowFitContext.RoleUsers.Where(r => r.RoleId == roleId).FirstOrDefault();
@@ -27,11 +30,24 @@ namespace slowfit.Controllers
                     return NotFound(new { message = "Role not Found" });
                 }
 
-                var usersByRole = _slowFitContext.Users.Where(u => u.RoleId == roleId).ToList().FirstOrDefault();
+                var usersByRole = _slowFitContext.Users
+                    .Where(u => u.RoleId == roleId)
+                    .Select(u => new UserRes
+                    {
+                        UserId = u.UserId,
+                        Email = u.Email,
+                        FirstName = u.FirstName,
+                        Surname = u.Surname,
+                        RoleId = u.RoleId,
+                        PtId = u.PtId,
+                        Phone = u.Phone,
+                        ImageProfile = u.ImageProfile
+                    })
+                    .ToList();
 
                 return Ok(usersByRole);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest("No users found whit this role");
             }
@@ -40,6 +56,8 @@ namespace slowfit.Controllers
         [HttpGet("pt/{ptId}")]
         public ActionResult<IEnumerable<UserRes>> GetUsersByPtId(int ptId)
         {
+            if (!User.IsPersonalTrainer() && User.GetUserId() != ptId) return Forbid();
+
             try
             {
                 // Fetch users by ptId directly and map them to UserRes
@@ -80,6 +98,8 @@ namespace slowfit.Controllers
         [HttpGet("alluser")]
         public ActionResult<IEnumerable<UserProfile>> GetAllUsers()
         {
+            if (!User.IsPersonalTrainer()) return Forbid();
+
             var userList = new List<UserProfile>();
             try
              {
@@ -95,7 +115,7 @@ namespace slowfit.Controllers
                    Country = u.Country!,
                    Province = u.Province!,
                    ZipCode = u.ZipCode!,
-                   BirthDate = DateTime.ParseExact(u.BirthDate!, "yyyy-MM-dd", CultureInfo.InvariantCulture),
+                   BirthDate = u.BirthDate,
                    RoleId = u.RoleId,
                    ImageProfile = u.ImageProfile!,
                    Phone = u.Phone!
@@ -106,7 +126,7 @@ namespace slowfit.Controllers
 
                 return Ok(userList);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest( $"An error occurred");
             }
@@ -117,6 +137,8 @@ namespace slowfit.Controllers
         [HttpGet("{id}")]
         public ActionResult<UserRes> GetProfile(int id)
         {
+            if (!User.CanAccessUser(id)) return Forbid();
+
             try
             {
                 var profile = _slowFitContext.Users.Where(u => u.UserId == id).Select(u => new UserRes
@@ -138,7 +160,7 @@ namespace slowfit.Controllers
 
                 return Ok(profile);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest("Error to loading profile");
             }
@@ -162,7 +184,7 @@ namespace slowfit.Controllers
                         Country = u.Country ?? null,
                         Province = u.Province ?? null,
                         ZipCode = u.ZipCode ?? null,
-                        BirthDate = u.BirthDate != null ? DateTime.ParseExact(u.BirthDate, "yyyy-MM-dd", CultureInfo.InvariantCulture) : null,
+                        BirthDate = u.BirthDate,
                         RoleId = u.RoleId!,
                         ImageProfile = u.ImageProfile ?? null,
                         Phone = u.Phone ?? null
@@ -175,9 +197,11 @@ namespace slowfit.Controllers
                     return NotFound(new { message = "Profile not found" });
                 }
 
+                if (!User.CanAccessUser(profile.UserId)) return Forbid();
+
                 return Ok(profile);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest("Error loading profile");
             }
@@ -187,6 +211,8 @@ namespace slowfit.Controllers
         [HttpPost("profile/{userId}")]
         public IActionResult CreateProfile(int userId, [FromBody] AddProfile newUser)
         {
+            if (!User.CanAccessUser(userId)) return Forbid();
+
             if (newUser == null)
             {
                 return BadRequest("Invalid request body.");
@@ -216,7 +242,7 @@ namespace slowfit.Controllers
                 existingUser.Country = newUser.Country;
                 existingUser.ZipCode = newUser.ZipCode;
                 existingUser.ImageProfile = newUser.ImageProfile;
-                existingUser.BirthDate = newUser.BirthDate?.ToString("yyyy-MM-dd");
+                existingUser.BirthDate = newUser.BirthDate?.Date;
                 existingUser.Phone = newUser.Phone;
 
                 _slowFitContext.SaveChanges();
@@ -234,6 +260,8 @@ namespace slowfit.Controllers
         [HttpPut("profile/{id}")]
         public IActionResult UpdateUser(int id, [FromBody] UserProfile updatedUser)
         {
+            if (!User.CanAccessUser(id)) return Forbid();
+
             if (updatedUser == null || updatedUser.UserId != id)
             {
                 return BadRequest("Invalid data or ID does not match");
@@ -248,7 +276,7 @@ namespace slowfit.Controllers
             // Aggiorna i dati
             existingUser.FirstName = updatedUser.FirstName;
             existingUser.Surname = updatedUser.Surname;
-            existingUser.BirthDate = updatedUser.BirthDate?.ToString("yyyy-MM-dd");
+            existingUser.BirthDate = updatedUser.BirthDate?.Date;
             existingUser.Province = updatedUser.Province;
             existingUser.Country = updatedUser.Country;
             existingUser.City = updatedUser.City;
@@ -266,7 +294,7 @@ namespace slowfit.Controllers
 
                 return Ok("User updated succesfully");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to update profile of {updatedUser.FirstName} {updatedUser.Surname}");
             }
@@ -276,6 +304,8 @@ namespace slowfit.Controllers
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
+            if (!User.IsPersonalTrainer()) return Forbid();
+
             var profile = _slowFitContext.Users.Where(u => u.UserId == id).FirstOrDefault();
 
             if (profile == null)
@@ -289,7 +319,7 @@ namespace slowfit.Controllers
                 _slowFitContext.SaveChanges();
                 return Ok("User deleted succesfully");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Error to delete user {profile.FirstName} {profile.Surname}");
             }

@@ -1,7 +1,12 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using slowfit.DBModels;
 using slowfit.JWT;
+using System.Text;
 
 namespace slowfit
 {
@@ -30,11 +35,50 @@ namespace slowfit
             }
 
             // ----------------- CONFIGURAZIONE SERVIZI -----------------
-            builder.Services.AddControllers();
+            builder.Services.AddControllers(options =>
+            {
+                options.Filters.Add(new AuthorizeFilter());
+            });
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(options =>
+            {
+                options.AddServer(new OpenApiServer { Url = "http://localhost:5051" });
+
+                options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "bearer",
+                    BearerFormat = "JWT",
+                    In = ParameterLocation.Header,
+                    Description = "Insert JWT token only. Swagger will add the Bearer prefix."
+                });
+
+                options.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        Array.Empty<string>()
+                    }
+                });
+            });
 
             builder.Services.Configure<JWTModel>(builder.Configuration.GetSection("JwtConfiguration"));
+            var jwtKey = builder.Configuration["JwtConfiguration:Key"];
+            var jwtIssuer = builder.Configuration["JwtConfiguration:Issuer"];
+            var jwtAudience = builder.Configuration["JwtConfiguration:Audience"];
+
+            if (string.IsNullOrWhiteSpace(jwtKey))
+            {
+                throw new InvalidOperationException("JwtConfiguration:Key is required.");
+            }
 
             // CORS
             builder.Services.AddCors(options =>
@@ -73,6 +117,28 @@ namespace slowfit
             .AddEntityFrameworkStores<SlowFitContext>()  // EF Core DbContext
             .AddDefaultTokenProviders();
 
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidIssuer = jwtIssuer,
+                    ValidateAudience = true,
+                    ValidAudience = jwtAudience,
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+                    ValidateLifetime = true,
+                    ClockSkew = TimeSpan.Zero
+                };
+            });
+
+            builder.Services.AddAuthorization();
+
             var app = builder.Build();
 
             if (app.Environment.IsDevelopment())
@@ -84,9 +150,8 @@ namespace slowfit
             //app.UseHttpsRedirection();
             app.UseCors("slowFit_policy");
 
+            app.UseAuthentication();
             app.UseAuthorization();
-
-            app.UseMiddleware<JWTConfiguration>(); // JWT custom
             app.MapControllers();
 
             app.Run();

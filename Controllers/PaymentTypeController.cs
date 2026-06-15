@@ -31,7 +31,7 @@ namespace slowfit.Controllers
 
                 return Ok(paymentList);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"An error occurred");
             }
@@ -60,7 +60,7 @@ namespace slowfit.Controllers
                 _slowFitContext.SaveChanges();
                 return Ok("Paymnet created successfully.");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to create payment");
             }
@@ -94,7 +94,7 @@ namespace slowfit.Controllers
 
                 return Ok("Payment updated succesfully");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to update payment: {paymentType.PaymentTypeName}");
             }
@@ -117,7 +117,7 @@ namespace slowfit.Controllers
                 _slowFitContext.SaveChanges();
                 return Ok("Payment delete succesfully");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Error to delete payment {pay.PaymentTypeName} ");
             }

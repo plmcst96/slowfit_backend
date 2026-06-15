@@ -86,8 +86,16 @@ public partial class SlowFitContext : DbContext
     public virtual DbSet<User> Users { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=SlowFit;Trusted_Connection=True;");
+    {
+        if (!optionsBuilder.IsConfigured)
+        {
+            var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__SlowFitDb");
+            if (!string.IsNullOrWhiteSpace(connectionString))
+            {
+                optionsBuilder.UseSqlServer(connectionString);
+            }
+        }
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -122,8 +130,7 @@ public partial class SlowFitContext : DbContext
                 .IsUnicode(false)
                 .HasColumnName("callUrl");
             entity.Property(e => e.Date)
-                .HasMaxLength(50)
-                .IsUnicode(false)
+                .HasColumnType("datetime2")
                 .HasColumnName("date");
             entity.Property(e => e.Description)
                 .HasMaxLength(250)
@@ -206,8 +213,7 @@ public partial class SlowFitContext : DbContext
                 .HasColumnType("decimal(5, 2)")
                 .HasColumnName("amount");
             entity.Property(e => e.Date)
-                .HasMaxLength(50)
-                .IsUnicode(false)
+                .HasColumnType("date")
                 .HasColumnName("date");
             entity.Property(e => e.OrderId).HasColumnName("orderId");
             entity.Property(e => e.PaymentTypeId).HasColumnName("paymentTypeId");
@@ -455,9 +461,8 @@ public partial class SlowFitContext : DbContext
             entity.Property(e => e.BodyId).HasColumnName("bodyId");
             entity.Property(e => e.Cm).HasColumnName("cm");
             entity.Property(e => e.CollectPeriod)
-                .HasMaxLength(50)
-                .IsUnicode(false)
                 .HasDefaultValueSql("(getdate())")
+                .HasColumnType("date")
                 .HasColumnName("collectPeriod");
             entity.Property(e => e.UserId).HasColumnName("userId");
 
@@ -478,12 +483,10 @@ public partial class SlowFitContext : DbContext
 
             entity.Property(e => e.NutritionId).HasColumnName("nutritionId");
             entity.Property(e => e.CreationDate)
-                .HasMaxLength(50)
-                .IsUnicode(false)
+                .HasColumnType("date")
                 .HasColumnName("creationDate");
             entity.Property(e => e.ExpirationDate)
-                .HasMaxLength(50)
-                .IsUnicode(false)
+                .HasColumnType("date")
                 .HasColumnName("expirationDate");
             entity.Property(e => e.TotDailyCalories).HasColumnName("totDailyCalories");
             entity.Property(e => e.TypeNutritionId).HasColumnName("typeNutritionId");
@@ -588,8 +591,7 @@ public partial class SlowFitContext : DbContext
                 .IsUnicode(false)
                 .HasColumnName("description");
             entity.Property(e => e.ExpirationDate)
-                .HasMaxLength(50)
-                .IsUnicode(false)
+                .HasColumnType("date")
                 .HasColumnName("expirationDate");
             entity.Property(e => e.Name)
                 .HasMaxLength(50)
@@ -697,14 +699,12 @@ public partial class SlowFitContext : DbContext
 
             entity.Property(e => e.TrainingId).HasColumnName("trainingId");
             entity.Property(e => e.CreationDate)
-                .HasMaxLength(50)
-                .IsUnicode(false)
                 .HasDefaultValueSql("(getdate())")
+                .HasColumnType("date")
                 .HasColumnName("creationDate");
             entity.Property(e => e.Duration).HasColumnName("duration");
             entity.Property(e => e.EndDate)
-                .HasMaxLength(50)
-                .IsUnicode(false)
+                .HasColumnType("date")
                 .HasColumnName("endDate");
             entity.Property(e => e.LevelId).HasColumnName("levelId");
             entity.Property(e => e.TypeId).HasColumnName("typeId");
@@ -769,8 +769,7 @@ public partial class SlowFitContext : DbContext
                 .IsUnicode(false)
                 .HasColumnName("address");
             entity.Property(e => e.BirthDate)
-                .HasMaxLength(50)
-                .IsUnicode(false)
+                .HasColumnType("date")
                 .HasColumnName("birthDate");
             entity.Property(e => e.City)
                 .HasMaxLength(50)
@@ -792,7 +791,6 @@ public partial class SlowFitContext : DbContext
                 .IsUnicode(false)
                 .HasColumnName("imageProfile");
             entity.Property(e => e.Password)
-                .HasMaxLength(50)
                 .IsUnicode(false)
                 .HasColumnName("password");
             entity.Property(e => e.Phone)

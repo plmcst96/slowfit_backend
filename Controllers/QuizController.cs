@@ -98,7 +98,7 @@ namespace slowfit.Controllers
 
                 return Ok(quiz);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"No quiz found with {id}");
             }
@@ -136,7 +136,7 @@ namespace slowfit.Controllers
                 _slowFitContext.SaveChanges();
                 return Ok("Quiz created successfully.");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to create Quiz");
             }
@@ -166,7 +166,7 @@ namespace slowfit.Controllers
 
                 return Ok("Quiz updated succesfully");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to update quiz: {quiz.QuizId}");
             }
@@ -189,7 +189,7 @@ namespace slowfit.Controllers
 
                 return Ok($"Quiz has been successfully cancelled");
             }
-            catch (Exception ex) 
+            catch (Exception) 
             { 
                 return BadRequest($"No quiz found whit {id}"); 
             }

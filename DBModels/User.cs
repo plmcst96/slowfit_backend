@@ -27,7 +27,7 @@ public partial class User
 
     public int? RoleId { get; set; }
 
-    public string? BirthDate { get; set; }
+    public DateTime? BirthDate { get; set; }
 
     public int? PtId { get; set; }
 

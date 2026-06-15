@@ -1,0 +1,27 @@
+services:
+  slowfit-api:
+    build: .
+    container_name: slowfit-backend
+    ports:
+      - "5051:5051"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      Kestrel__Endpoints__Http__Url: "http://0.0.0.0:5052"
+      ConnectionStrings__dbConnectionString: "Server=slowfit-sql,1433;Database=SlowFit;User Id=sa;Password=Slowfit123!;TrustServerCertificate=True;"
+      JwtConfiguration__Key: "dev-only-change-this-jwt-signing-key-32chars"
+      JwtConfiguration__Issuer: "slowfit-api"
+      JwtConfiguration__Audience: "slowfit-client"
+    depends_on:
+      - slowfit-sql
+  slowfit-sql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: slowfit-sql
+    ports:
+      - "1433:1433"
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Slowfit123!"
+    volumes:
+      - slowfit-sql-data:/var/opt/mssql
+volumes:
+  slowfit-sql-data:

@@ -25,7 +25,7 @@ namespace slowfit.Controllers
                 {
                     Description = p.Description,
                     Name = p.Name,
-                    ExpirationDate = DateTime.ParseExact(p.ExpirationDate, "yyyy-MM-dd", CultureInfo.InvariantCulture),
+                    ExpirationDate = p.ExpirationDate,
                     ProductId = p.ProductId,
                     Price = p.Price,
                 }).ToList();
@@ -51,7 +51,7 @@ namespace slowfit.Controllers
                 if (product == null) return NotFound();
 
                 return Ok(product);
-            } catch (Exception ex)
+            } catch (Exception)
             {
                 return BadRequest("No product found");
             }
@@ -82,14 +82,14 @@ namespace slowfit.Controllers
                 {
                     Description = product.Description,
                     Name = product.Name,
-                    ExpirationDate = product.ExpirationDate.ToString("yyyy-MM-dd"),
+                    ExpirationDate = product.ExpirationDate.Date,
                     Price = product.Price
                 };
                 _slowFitContext.Products.Add(prod);
                 _slowFitContext.SaveChanges();
                 return Ok("Product created successfully.");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to create product");
             }
@@ -103,7 +103,7 @@ namespace slowfit.Controllers
 
 
 
-            product.ExpirationDate = updatedProduct.ExpirationDate.ToString("yyyy-MM-dd");
+            product.ExpirationDate = updatedProduct.ExpirationDate.Date;
             product.Name = updatedProduct.Name;
             product.Price = updatedProduct.Price;
             product.Description = updatedProduct.Description;
@@ -118,7 +118,7 @@ namespace slowfit.Controllers
 
                 return NoContent();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to update product: {updatedProduct.Name}");
             }
@@ -136,7 +136,7 @@ namespace slowfit.Controllers
                 _slowFitContext.SaveChanges();
                 return NoContent();
             }
-            catch (Exception ex) {
+            catch (Exception) {
                 return BadRequest($"Error to delete product {product.Name} ");
             }
             

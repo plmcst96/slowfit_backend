@@ -32,7 +32,7 @@ namespace slowfit.Controllers
 
                 return Ok(locationList);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"An error occurred");
             }
@@ -66,7 +66,7 @@ namespace slowfit.Controllers
                 _slowFitContext.SaveChanges();
                 return Ok("Location training created successfully.");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to create Location training");
             }
@@ -99,7 +99,7 @@ namespace slowfit.Controllers
 
                 return Ok("Location training updated succesfully");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to update Location training: {existingType.LocationString}");
             }
@@ -121,7 +121,7 @@ namespace slowfit.Controllers
                 _slowFitContext.SaveChanges();
                 return Ok("Location training deleted successfully");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to delete location training: {location.LocationString}");
             }

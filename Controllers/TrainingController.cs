@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using slowfit.Auth;
 using slowfit.DBModels;
 using slowfit.DTORequest;
 using slowfit.DTOResponse;
@@ -18,6 +19,8 @@ namespace slowfit.Controllers
         [HttpGet]
         public ActionResult<IEnumerable<TrainingRes>> GetTrainings()
         {
+            if (!User.IsPersonalTrainer()) return Forbid();
+
             var trainingList = new List<TrainingRes>();
             try
             {
@@ -38,7 +41,7 @@ namespace slowfit.Controllers
 
                 return Ok(trainingList);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest( $"An error occurred");
             }
@@ -51,9 +54,10 @@ namespace slowfit.Controllers
             {
                 var training = _slowFitContext.Training.Where(t => t.TrainingId == id).FirstOrDefault();
                 if (training == null) return NotFound();
+                if (!User.CanAccessUser(training.UserId)) return Forbid();
                 return Ok(training);
             }
-            catch (Exception ex) { 
+            catch (Exception) { 
                 return BadRequest($"No training found with {id}");
             }
             
@@ -62,13 +66,15 @@ namespace slowfit.Controllers
         [HttpGet("byDate")]
         public ActionResult<IEnumerable<TrainingRes>> GetTrainingByDate([FromQuery] DateTime date)
         {
+            if (!User.IsPersonalTrainer()) return Forbid();
+
             try
             {
-                var filteredTrainings = _slowFitContext.Training.Where(t => DateTime.ParseExact(t.CreationDate!, "yyyy-MM-dd", CultureInfo.InvariantCulture) == date.Date).ToList();
+                var filteredTrainings = _slowFitContext.Training.Where(t => t.CreationDate == date.Date).ToList();
                 if (filteredTrainings.Count == 0) return NotFound($"No trainings found for this {date}.");
                 return Ok(filteredTrainings);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"No trainings found in this date {date}.");
             }
@@ -80,15 +86,17 @@ namespace slowfit.Controllers
             [FromQuery] DateTime startDate,
             [FromQuery] DateTime endDate)
         {
+            if (!User.IsPersonalTrainer()) return Forbid();
+
             try
             {
                 var filteredTrainings = _slowFitContext.Training
-                .Where(t => DateTime.ParseExact(t.CreationDate!, "yyyy-MM-dd", CultureInfo.InvariantCulture) >= startDate.Date && DateTime.ParseExact(t.CreationDate!,"yyyy-MM-dd", CultureInfo.InvariantCulture) <= endDate.Date)
+                .Where(t => t.CreationDate >= startDate.Date && t.CreationDate <= endDate.Date)
                 .ToList();
                 if (filteredTrainings.Count == 0) return NotFound($"No trainings found in this date range {startDate} to {endDate}.");
                 return Ok(filteredTrainings);
             }
-            catch (Exception ex) {
+            catch (Exception) {
                 return BadRequest();
             }
 
@@ -98,6 +106,8 @@ namespace slowfit.Controllers
         [HttpGet("byUser/{userId}")]
         public ActionResult<IEnumerable<TrainingRes>> GetTrainingByUserId(int userId)
         {
+            if (!User.CanAccessUser(userId)) return Forbid();
+
             try
             {
                 var userTrainings = _slowFitContext.Training
@@ -115,8 +125,8 @@ namespace slowfit.Controllers
                     UserId = t.UserId,
                     LevelId = t.LevelId,
                     Duration = t.Duration,
-                    CreationDate = DateTime.ParseExact(t.CreationDate!, "yyyy-MM-dd", CultureInfo.InvariantCulture),
-                    EndDate = DateTime.ParseExact(t.EndDate!, "yyyy-MM-dd", CultureInfo.InvariantCulture),
+                    CreationDate = t.CreationDate ?? default,
+                    EndDate = t.EndDate ?? default,
                     DetailExercises = t.DetailExercises.Select(de => new DetailExerciseRes
                     {
                         ExerciseId = de.ExerciseId,
@@ -129,7 +139,7 @@ namespace slowfit.Controllers
 
                 return Ok(trainingList);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest("An error occurred while fetching trainings for user.");
             }
@@ -139,6 +149,8 @@ namespace slowfit.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateTrainingDet([FromBody] TrainingRes request)
         {
+            if (!User.CanAccessUser(request.UserId)) return Forbid();
+
             try
             {
                 // 1️⃣ Creazione del training
@@ -148,8 +160,8 @@ namespace slowfit.Controllers
                     UserId = request.UserId,
                     LevelId = request.LevelId,
                     Duration = request.Duration,
-                    CreationDate = request.CreationDate.ToString("yyyy-MM-dd"),
-                    EndDate = request.EndDate.ToString("yyyy-MM-dd"),
+                    CreationDate = request.CreationDate.Date,
+                    EndDate = request.EndDate.Date,
                     DetailExercises = new List<DetailExercise>()
                 };
 
@@ -198,7 +210,7 @@ namespace slowfit.Controllers
                 // 4️⃣ Restituisci il DTO come risposta
                 return Ok(trainingDto);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Log dell'errore se vuoi
                 return StatusCode(500, "Si è verificato un errore durante la creazione dell'allenamento.");
@@ -216,14 +228,15 @@ namespace slowfit.Controllers
                 .FirstOrDefault(t => t.TrainingId == id);
 
             if (training == null) return NotFound();
+            if (!User.CanAccessUser(training.UserId) || !User.CanAccessUser(updatedTraining.UserId)) return Forbid();
 
             // Aggiorno i campi principali
             training.TypeId = updatedTraining.TypeId;
             training.UserId = updatedTraining.UserId;
             training.LevelId = updatedTraining.LevelId;
             training.Duration = updatedTraining.Duration;
-            training.CreationDate = DateTime.Now.ToString("yyyy-MM-dd");
-            training.EndDate = updatedTraining.EndDate.ToString("yyyy-MM-dd");
+            training.CreationDate = DateTime.UtcNow.Date;
+            training.EndDate = updatedTraining.EndDate.Date;
 
             try
             {
@@ -246,7 +259,7 @@ namespace slowfit.Controllers
 
                 return Ok("Training updated successfully");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to update training: {updatedTraining.TrainingId}");
             }
@@ -260,6 +273,7 @@ namespace slowfit.Controllers
                 .FirstOrDefault(t => t.TrainingId == id);
 
             if (training == null) return NotFound();
+            if (!User.CanAccessUser(training.UserId)) return Forbid();
 
             try
             {
@@ -274,7 +288,7 @@ namespace slowfit.Controllers
 
                 return Ok("The training and all associated exercises have been successfully deleted.");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to delete training with id {id}.");
             }

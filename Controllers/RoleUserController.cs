@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.AspNetCore.Mvc;
+using slowfit.Auth;
 using slowfit.DBModels;
 using slowfit.DTORequest;
 
@@ -32,7 +33,7 @@ namespace slowfit.Controllers
 
                 return Ok(roleList);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"An error occurred");
             }
@@ -41,6 +42,8 @@ namespace slowfit.Controllers
         [HttpPost]
         public IActionResult Post([FromBody] RoleUserRes roleUser)
         {
+            if (!User.IsSuperAdmin()) return Forbid();
+
             if (roleUser == null)
             {
                 return BadRequest("Data role incorrect");
@@ -60,7 +63,7 @@ namespace slowfit.Controllers
                 _slowFitContext.SaveChanges();
                 return Ok("Role created successfully.");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to create role");
             }
@@ -70,6 +73,8 @@ namespace slowfit.Controllers
         [HttpPut("{id}")]
         public IActionResult Put(int id, [FromBody] RoleUserRes roleUser)
         {
+            if (!User.IsSuperAdmin()) return Forbid();
+
             if (roleUser == null || roleUser.RoleId != id)
             {
                 return BadRequest("Invalid data or ID does not match");
@@ -94,7 +99,7 @@ namespace slowfit.Controllers
 
                 return Ok("Role updated succesfully");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to update role: {roleUser.RoleName}");
             }
@@ -104,6 +109,8 @@ namespace slowfit.Controllers
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
+            if (!User.IsSuperAdmin()) return Forbid();
+
             var role = _slowFitContext.RoleUsers.Where(r => r.RoleId == id).FirstOrDefault();
 
             if (role == null)
@@ -117,7 +124,7 @@ namespace slowfit.Controllers
                 _slowFitContext.SaveChanges();
                 return Ok("Role delete succesfully");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Error to delete role {role.RoleName} ");
             }

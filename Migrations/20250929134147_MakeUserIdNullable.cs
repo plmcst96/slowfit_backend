@@ -144,15 +144,6 @@ namespace slowfit.Migrations
 
             migrationBuilder.AlterColumn<int>(
                 name: "userId",
-                table: "user",
-                type: "int",
-                nullable: false,
-                oldClrType: typeof(int),
-                oldType: "int")
-                .Annotation("SqlServer:Identity", "1, 1");
-
-            migrationBuilder.AlterColumn<int>(
-                name: "userId",
                 table: "nutrition",
                 type: "int",
                 nullable: true,

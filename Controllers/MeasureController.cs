@@ -26,7 +26,7 @@ namespace slowfit.Controllers
                     MeasureId = t.MeasureId,
                     Cm = t.Cm,
                     BodyId = t.BodyId,
-                    CollectPeriod = DateTime.ParseExact(t.CollectPeriod, "yyyy-MM-dd", CultureInfo.InvariantCulture),
+                    CollectPeriod = t.CollectPeriod,
                 }).ToList();
 
 
@@ -34,7 +34,7 @@ namespace slowfit.Controllers
 
                 return Ok(measureList);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"An error occurred");
             }
@@ -50,7 +50,7 @@ namespace slowfit.Controllers
                 if (measure == null) return NotFound();
                 return Ok(measure);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"No measure found with {id}");
             }
@@ -62,11 +62,11 @@ namespace slowfit.Controllers
         {
             try
             {
-                var filteredMeasure = _slowFitContext.Measures.Where(t => DateTime.ParseExact(t.CollectPeriod, "yyyy-MM-dd", CultureInfo.InvariantCulture) == date.Date).ToList();
+                var filteredMeasure = _slowFitContext.Measures.Where(t => t.CollectPeriod == date.Date).ToList();
                 if (filteredMeasure.Count == 0) return NotFound($"No trainings found for this {date}.");
                 return Ok(filteredMeasure);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"No measure found in this date {date}.");
             }
@@ -86,7 +86,7 @@ namespace slowfit.Controllers
                         Cm = m.Cm,
                         BodyId = m.BodyId,
                         UserId = m.UserId,
-                        CollectPeriod = DateTime.ParseExact(m.CollectPeriod, "yyyy-MM-dd", CultureInfo.InvariantCulture)
+                        CollectPeriod = m.CollectPeriod
                     })
                     .ToList();
 
@@ -95,7 +95,7 @@ namespace slowfit.Controllers
 
                 return Ok(measures);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest("An error occurred while retrieving the user's measures.");
             }
@@ -130,13 +130,13 @@ namespace slowfit.Controllers
                     UserId = measure.UserId,
                     BodyId = measure.BodyId,
                     Cm = measure.Cm,
-                    CollectPeriod = measure.CollectPeriod.ToString("yyyy-MM-dd"),
+                    CollectPeriod = measure.CollectPeriod.Date,
                 };
                 _slowFitContext.Measures.Add(mea);
                 _slowFitContext.SaveChanges();
                 return Ok("Measure created successfully.");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to create measure");
             }
@@ -151,7 +151,7 @@ namespace slowfit.Controllers
 
             measure.BodyId = updateMeasure.BodyId;
             measure.Cm = updateMeasure.Cm;
-            measure.CollectPeriod = updateMeasure.CollectPeriod.ToString("yyyy-MM-dd");
+            measure.CollectPeriod = updateMeasure.CollectPeriod.Date;
           
             try
             {
@@ -162,7 +162,7 @@ namespace slowfit.Controllers
 
                 return Ok("Measure updated succesfully");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to update measure: {updateMeasure.MeasureId}");
             }
@@ -182,7 +182,7 @@ namespace slowfit.Controllers
 
                 return Ok($"The measure has been successfully cancelled");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"No measure found whit {id}");
             }

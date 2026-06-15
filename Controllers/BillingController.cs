@@ -27,7 +27,7 @@ namespace slowfit.Controllers
                     PaymentTypeId = t.PaymentTypeId,
                     OrderId = t.OrderId,
                     UserId = t.UserId,
-                    Date = DateTime.ParseExact(t.Date, "yyyy-MM-dd", CultureInfo.InvariantCulture),
+                    Date = t.Date,
                     Amount = t.Amount,
 
                 }).ToList();
@@ -37,7 +37,7 @@ namespace slowfit.Controllers
 
                 return Ok(billingList);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"An error occurred");
             }
@@ -53,7 +53,7 @@ namespace slowfit.Controllers
                 if (billing == null) return NotFound();
                 return Ok(billing);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"No billing found with {id}");
             }
@@ -68,7 +68,7 @@ namespace slowfit.Controllers
                 if (billing == null) return NotFound();
                 return Ok(billing);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"No billing found with {userId}");
             }
@@ -100,14 +100,14 @@ namespace slowfit.Controllers
                     PaymentTypeId = billing.PaymentTypeId,
                     OrderId = billing.OrderId,
                     UserId = billing.UserId,
-                    Date = billing.Date.ToString("yyyy-MM-dd"),
+                    Date = billing.Date.Date,
                     Amount = billing.Amount
                 };
                 _slowFitContext.Billings.Add(bil);
                 _slowFitContext.SaveChanges();
                 return Ok("Billing created successfully.");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to create billing");
             }

@@ -13,7 +13,7 @@ public partial class Billing
 
     public int UserId { get; set; }
 
-    public string Date { get; set; } = null!;
+    public DateTime Date { get; set; }
 
     public decimal Amount { get; set; }
 

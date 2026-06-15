@@ -32,7 +32,7 @@ namespace slowfit.Controllers
 
                 return Ok(typeList);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"An error occurred");
             }
@@ -88,7 +88,7 @@ namespace slowfit.Controllers
                 _slowFitContext.SaveChanges();
                 return Ok("Nutritional Plan created successfully.");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to create nutritional plan");
             }
@@ -122,7 +122,7 @@ namespace slowfit.Controllers
 
                 return Ok("Nutritional Plan updated succesfully");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to update nutritional plan: {typeN.TypeNutritionName}");
             }
@@ -145,7 +145,7 @@ namespace slowfit.Controllers
                 _slowFitContext.SaveChanges();
                 return Ok("Plan delete succesfully");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Error to delete plan {typeN.TypeNutritionName} ");
             }

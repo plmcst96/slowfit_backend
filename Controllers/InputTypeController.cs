@@ -29,7 +29,7 @@ namespace slowfit.Controllers
 
                 return Ok(inputList);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"An error occurred");
             }
@@ -44,7 +44,7 @@ namespace slowfit.Controllers
                 if (inputType == null) return NotFound();
                 return Ok(inputType);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest( $"An error occurred");
             }
@@ -74,7 +74,7 @@ namespace slowfit.Controllers
                 _slowFitContext.SaveChanges();
                 return Ok("Input created successfully.");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to create Input");
             }
@@ -96,7 +96,7 @@ namespace slowfit.Controllers
 
                 return NoContent();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to update input: {updatedInputType.InputTypeName}");
             }
@@ -113,7 +113,7 @@ namespace slowfit.Controllers
                 _slowFitContext.SaveChanges();
                 return NoContent();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Error to delete input {input.InputTypeName} ");
             }

@@ -31,7 +31,7 @@ namespace slowfit.Controllers
 
                 return Ok(bodyList);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"An error occurred");
             }
@@ -60,7 +60,7 @@ namespace slowfit.Controllers
                 _slowFitContext.SaveChanges();
                 return Ok("body part created successfully.");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to create body part");
             }
@@ -94,7 +94,7 @@ namespace slowfit.Controllers
 
                 return Ok("Body part updated succesfully");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to update body part: {bodyP.BodyPartName}");
             }
@@ -117,7 +117,7 @@ namespace slowfit.Controllers
                 _slowFitContext.SaveChanges();
                 return Ok("Body plan delete succesfully");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Error to delete body part {bodyP.BodyPartName} ");
             }

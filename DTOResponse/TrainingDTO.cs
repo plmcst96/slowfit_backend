@@ -17,13 +17,12 @@ namespace slowfit.DTOResponse
 
         public int? Duration { get; set; }
 
-        public string CreationDate { get; set; }
+        public DateTime? CreationDate { get; set; }
 
-        public string EndDate { get; set; }
+        public DateTime? EndDate { get; set; }
 
         public List<DetailExerciseDTO> DetailExercises { get; set; } = new();
     }
 
 }
-
 

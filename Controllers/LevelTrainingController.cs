@@ -28,7 +28,7 @@ namespace slowfit.Controllers
                 if (levelList.Count == 0) return NoContent();
                 return Ok(levelList);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"An error occurred");
             }
@@ -55,7 +55,7 @@ namespace slowfit.Controllers
 
                 return Ok(type);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest("An error occurred while retrieving the level training.");
             }
@@ -83,7 +83,7 @@ namespace slowfit.Controllers
                 _slowFitContext.SaveChanges();
                 return Ok(type);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"An error occurred");
             }
@@ -112,7 +112,7 @@ namespace slowfit.Controllers
                 _slowFitContext.SaveChanges();
                 return Ok(level);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"An error occurred");
             }
@@ -133,7 +133,7 @@ namespace slowfit.Controllers
                 _slowFitContext.SaveChanges();
                 return Ok("Level training deleted successfully.");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"An error occurred");
             }

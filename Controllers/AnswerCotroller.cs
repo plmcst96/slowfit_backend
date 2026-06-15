@@ -3,8 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using slowfit.DBModels;
 using slowfit.DTORequest;
 
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-
 namespace slowfit.Controllers
 {
     [Route("slowFit/answer")]
@@ -31,7 +29,7 @@ namespace slowfit.Controllers
 
                 return Ok(answerList);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"An error occurred");
             }
@@ -46,7 +44,7 @@ namespace slowfit.Controllers
                 if (answer == null) return NotFound();
                 return Ok(answer);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest();
             }
@@ -62,7 +60,7 @@ namespace slowfit.Controllers
                 if (filteredAnswers.Count == 0) return NotFound($"No answer found for user {questionId}.");
                 return Ok(filteredAnswers);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest();
             }
@@ -92,7 +90,7 @@ namespace slowfit.Controllers
                 _slowFitContext.SaveChanges();
                 return Ok("Answer created successfully.");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to create answer");
             }
@@ -115,7 +113,7 @@ namespace slowfit.Controllers
 
                 return Ok("Answer updated succesfully");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to update answer: {updatedAnswer.AnswerId}");
             }
@@ -132,7 +130,7 @@ namespace slowfit.Controllers
                 _slowFitContext.SaveChanges();
                 return Ok("Answer delete succesfully");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Error to delete answer {id} ");
             }

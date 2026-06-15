@@ -25,7 +25,7 @@ namespace slowfit.Controllers
                 appointmentList = _slowFitContext.Appointments.Select(t => new AppointmentRes
                 {
                     AppointmentId = t.AppointmentId,
-                    Date = DateTime.ParseExact(t.Date, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),
+                    Date = t.Date,
                     PtId = t.PtId,
                     Description = t.Description,
                     Duration = t.Duration,
@@ -39,7 +39,7 @@ namespace slowfit.Controllers
 
                 return Ok(appointmentList);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"An error occurred");
             };
@@ -59,7 +59,7 @@ namespace slowfit.Controllers
                           (a, u) => new AppointmentResponse
                           {
                               AppointmentId = a.AppointmentId,
-                              Date = DateTime.ParseExact(a.Date, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),
+                              Date = a.Date,
                               PtId = a.PtId,
                               Description = a.Description,
                               Duration = a.Duration,
@@ -74,7 +74,7 @@ namespace slowfit.Controllers
                 if (appointment == null) return NotFound();
                 return Ok(appointment);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"No appointment found with {id}");
             }
@@ -89,7 +89,7 @@ namespace slowfit.Controllers
                 if (appointment == null) return NotFound();
                 return Ok(appointment);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"No appointment found for {userId}");
             }
@@ -101,11 +101,11 @@ namespace slowfit.Controllers
             try
             {
                 var appointments = _slowFitContext.Appointments
-                    .Where(a => DateTime.ParseExact(a.Date, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture).Date == date.Date)
+                    .Where(a => a.Date.Date == date.Date)
                     .Select(a => new AppointmentRes
                     {
                         AppointmentId = a.AppointmentId,
-                        Date = DateTime.ParseExact(a.Date, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),
+                        Date = a.Date,
                         PtId = a.PtId,
                         Description = a.Description,
                         Duration = a.Duration,
@@ -135,7 +135,7 @@ namespace slowfit.Controllers
                           (a, u) => new AppointmentResponse
                           {
                               AppointmentId = a.AppointmentId,
-                              Date = DateTime.ParseExact(a.Date, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),
+                              Date = a.Date,
                               PtId = a.PtId,
                               Description = a.Description,
                               Duration = a.Duration,
@@ -182,7 +182,7 @@ namespace slowfit.Controllers
             {
                 var app = new Appointment()
                 {
-                    Date = appointment.Date.ToString("yyyy-MM-dd HH:mm:ss"),
+                    Date = appointment.Date,
                     PtId = appointment.PtId,
                     Description = appointment.Description,
                     Duration = appointment.Duration,
@@ -196,7 +196,7 @@ namespace slowfit.Controllers
                 _slowFitContext.SaveChanges();
                 return Ok(new { message = "Appointment created successfully." });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest("Failed to create appointment");
             }
@@ -210,7 +210,7 @@ namespace slowfit.Controllers
             var appointment = _slowFitContext.Appointments.Where(t => t.AppointmentId == id).FirstOrDefault();
             if (appointment == null) return NotFound();
 
-            appointment.Date = updateApp.Date.ToString("yyyy-MM-dd HH:mm:ss");
+            appointment.Date = updateApp.Date;
             appointment.PtId = updateApp.PtId;
             appointment.Description = updateApp.Description;
             appointment.CallUrl = updateApp.CallUrl;
@@ -225,7 +225,7 @@ namespace slowfit.Controllers
 
                 return Ok(new { message = "Appointment updated succesfully" });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to update appointment: {updateApp.AppointmentId}");
             }
@@ -245,7 +245,7 @@ namespace slowfit.Controllers
 
                 return Ok($"The appointment has been successfully cancelled");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"No appointment found whit {id}");
             }

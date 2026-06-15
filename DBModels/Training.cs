@@ -11,9 +11,9 @@ public partial class Training
 
     public int UserId { get; set; }
 
-    public string? CreationDate { get; set; }
+    public DateTime? CreationDate { get; set; }
 
-    public string? EndDate { get; set; }
+    public DateTime? EndDate { get; set; }
 
     public int? LevelId { get; set; }
 

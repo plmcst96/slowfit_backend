@@ -30,7 +30,7 @@ namespace slowfit.Controllers
                 }).ToList();
                 if (detailExercises.Count == 0) return NoContent();
                 return Ok(detailExercises);
-            } catch (Exception ex) {
+            } catch (Exception) {
                 return BadRequest($"An error occurred");
             }
         }
@@ -56,7 +56,7 @@ namespace slowfit.Controllers
                 if (detailExercise == null) return NoContent();
                 return Ok(detailExercise);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"An error occurred");
             }
@@ -82,7 +82,7 @@ namespace slowfit.Controllers
                 if (detailExercise == null) return NoContent();
                 return Ok(detailExercise);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"An error occurred");
             }
@@ -118,7 +118,7 @@ namespace slowfit.Controllers
                 _slowFitContext.SaveChanges();
                 return Ok("Detail exercise created successfully.");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to create Detail exercise");
             }
@@ -150,7 +150,7 @@ namespace slowfit.Controllers
                 _slowFitContext.SaveChanges();
                 return Ok("Detail exercise updated successfully.");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to update Detail exercise");
             }
@@ -171,7 +171,7 @@ namespace slowfit.Controllers
                 _slowFitContext.SaveChanges();
                 return Ok("Detail exercise deleted successfully.");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"Failed to delete Detail exercise");
             }

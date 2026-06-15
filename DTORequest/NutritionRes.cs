@@ -4,7 +4,7 @@
     {
         public int NutritionId { get; set; }
 
-        public DateTime ExpirationDate { get; set; }
+        public DateTime? ExpirationDate { get; set; }
 
         public List<MealRes> Meals { get; set; } = new();
 

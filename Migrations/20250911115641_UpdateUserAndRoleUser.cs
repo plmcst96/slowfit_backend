@@ -51,22 +51,12 @@ namespace slowfit.Migrations
                 name: "ingredientId",
                 table: "meal");
 
-            migrationBuilder.AlterColumn<int>(
-                name: "userId",
-                table: "user",
-                type: "int",
-                nullable: false,
-                oldClrType: typeof(int),
-                oldType: "int")
-                .OldAnnotation("SqlServer:Identity", "1, 1");
-
             migrationBuilder.AddColumn<int>(
                 name: "Id",
                 table: "user",
                 type: "int",
                 nullable: false,
-                defaultValue: 0)
-                .Annotation("SqlServer:Identity", "1, 1");
+                defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
                 name: "AccessFailedCount",

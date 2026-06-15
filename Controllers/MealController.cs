@@ -43,7 +43,7 @@ namespace slowfit.Controllers
 
                 return Ok(mealList);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"An error occurred");
             }
@@ -143,7 +143,7 @@ namespace slowfit.Controllers
                 if (meal == null) return NotFound();
                 return Ok(meal);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"No meal found with {id}");
             }
@@ -179,7 +179,7 @@ namespace slowfit.Controllers
 
                 return Ok(meals);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest($"An error occurred while fetching meals for category {categoryId}");
             }

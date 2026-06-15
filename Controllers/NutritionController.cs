@@ -24,8 +24,8 @@ namespace slowfit.Controllers
                     UserId = n.UserId,
                     TypeNutritionId = n.TypeNutritionId,
                     TotDailyCalories = n.TotDailyCalories,
-                    CreationDate = string.IsNullOrEmpty(n.CreationDate) ? default : DateTime.ParseExact(n.CreationDate, "yyyy-MM-dd", CultureInfo.InvariantCulture),
-                    ExpirationDate = string.IsNullOrEmpty(n.ExpirationDate) ? default : DateTime.ParseExact(n.ExpirationDate, "yyyy-MM-dd", CultureInfo.InvariantCulture),
+                    CreationDate = n.CreationDate ?? default,
+                    ExpirationDate = n.ExpirationDate,
                     Meals = n.NutritionMeals.Select(nm => new MealRes
                     {
                         MealId = nm.Meal.MealId,
@@ -63,12 +63,8 @@ namespace slowfit.Controllers
                 UserId = nutrition.UserId,
                 TypeNutritionId = nutrition.TypeNutritionId,
                 TotDailyCalories = nutrition.TotDailyCalories,
-                CreationDate = string.IsNullOrEmpty(nutrition.CreationDate)
-                    ? default
-                    : DateTime.ParseExact(nutrition.CreationDate, "yyyy-MM-dd", CultureInfo.InvariantCulture),
-                ExpirationDate = string.IsNullOrEmpty(nutrition.ExpirationDate)
-                    ? default
-                    : DateTime.ParseExact(nutrition.ExpirationDate, "yyyy-MM-dd", CultureInfo.InvariantCulture),
+                CreationDate = nutrition.CreationDate ?? default,
+                ExpirationDate = nutrition.ExpirationDate,
                 Meals = [.. nutrition.NutritionMeals.Select(nm => new MealRes
                 {
                     MealId = nm.Meal.MealId,
@@ -112,12 +108,8 @@ namespace slowfit.Controllers
                 UserId = n.UserId,
                 TypeNutritionId = n.TypeNutritionId,
                 TotDailyCalories = n.TotDailyCalories,
-                CreationDate = string.IsNullOrEmpty(n.CreationDate)
-                    ? default
-                    : DateTime.ParseExact(n.CreationDate, "yyyy-MM-dd", CultureInfo.InvariantCulture),
-                ExpirationDate = string.IsNullOrEmpty(n.ExpirationDate)
-                    ? default
-                    : DateTime.ParseExact(n.ExpirationDate, "yyyy-MM-dd", CultureInfo.InvariantCulture),
+                CreationDate = n.CreationDate ?? default,
+                ExpirationDate = n.ExpirationDate,
                 Meals = [.. n.NutritionMeals.Select(nm => new MealRes
                 {
                     MealId = nm.Meal.MealId,
@@ -166,7 +158,7 @@ namespace slowfit.Controllers
 
             // Controllo date
             if (request.CreationDate == default)
-                request.CreationDate = DateTime.Now;
+                request.CreationDate = DateTime.UtcNow.Date;
 
             // Optional: verifica esistenza utente e tipo nutrizione nel DB
             var userExists = await _slowFitContext.Users.AnyAsync(u => u.UserId == request.UserId);
@@ -183,8 +175,8 @@ namespace slowfit.Controllers
                 UserId = request.UserId,
                 TypeNutritionId = request.TypeNutritionId,
                 TotDailyCalories = request.TotDailyCalories,
-                CreationDate = request.CreationDate.ToString("yyyy-MM-dd"),
-                ExpirationDate = request.ExpirationDate?.ToString("yyyy-MM-dd"),
+                CreationDate = request.CreationDate.Date,
+                ExpirationDate = request.ExpirationDate?.Date,
                 NutritionMeals = [.. request.Meals.Select(m => new NutritionMeal
                 {
                     MealId = m.MealId,
@@ -223,8 +215,8 @@ namespace slowfit.Controllers
 
             nutrition.TypeNutritionId = request.TypeNutritionId;
             nutrition.TotDailyCalories = request.TotDailyCalories;
-            nutrition.CreationDate = request.CreationDate.ToString("yyyy-MM-dd");
-            nutrition.ExpirationDate = request.ExpirationDate?.ToString("yyyy-MM-dd");
+            nutrition.CreationDate = request.CreationDate.Date;
+            nutrition.ExpirationDate = request.ExpirationDate?.Date;
 
             // 🔄 Aggiorniamo i collegamenti NutritionMeal
             var incomingMeals = request.Meals.ToDictionary(m => m.MealId);
@@ -285,7 +277,7 @@ public async Task<IActionResult> DeleteNutrition(int id)
     {
 
         // Impostiamo la data di eliminazione
-        nutrition.ExpirationDate = DateTime.Now.ToString("yyyy-MM-dd");
+        nutrition.ExpirationDate = DateTime.UtcNow.Date;
 
         await _slowFitContext.SaveChangesAsync();
         return Ok("Piano nutrizionale eliminato con successo.");
