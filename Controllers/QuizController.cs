@@ -1,198 +1,29 @@
-﻿using System;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using slowfit.DBModels;
 using slowfit.DTORequest;
-using slowfit.DTOResponse;
+using slowfit.Services;
 
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+namespace slowfit.Controllers;
 
-namespace slowfit.Controllers
+[AllowAnonymous]
+[Route("slowFit/quiz")]
+[ApiController]
+public class QuizController(IQuizService quizService) : ControllerBase
 {
-    [Route("slowFit/quiz")]
-    [ApiController]
-    public class QuizController(SlowFitContext slowFitCtx) : ControllerBase
-    {
-        private readonly SlowFitContext _slowFitContext = slowFitCtx;
+    private readonly IQuizService _quizService = quizService;
 
-        // GET: slowFit/quiz?type=...
-        [HttpGet]
-        public ActionResult<IEnumerable<QuizUserRes>> GetQuizzes([FromQuery] string? type)
-        {
-            try
-            {
-                var query = _slowFitContext.Quizzes.AsQueryable();
+    [HttpGet]
+    public async Task<IActionResult> GetQuizzes([FromQuery] string? type) => this.ToActionResult(await _quizService.GetAllAsync(type));
 
-                // 🔹 Filtro per Type (QueryString)
-                if (!string.IsNullOrEmpty(type))
-                {
-                    query = query.Where(q => q.Type == type);
-                }
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetQuiz(int id) => this.ToActionResult(await _quizService.GetByIdAsync(id));
 
-                // 🧮 Ordina: prima quelli senza input
-                query = query.OrderBy(q => q.Input)  // false (0) prima di true (1)
-                             .ThenBy(q => q.QuizId);
+    [HttpPost]
+    public async Task<IActionResult> CreateQuiz([FromBody] QuizUserRes request) => this.ToActionResult(await _quizService.CreateAsync(request));
 
-                var quizList = query
-                    .Select(q => new QuizUserResponse
-                    {
-                        QuizId = q.QuizId,
-                        QuestionId = q.QuestionId,
-                        Input = q.Input,
-                        InputTypeId = q.InputTypeId,
-                        SingleResponse = q.SingleResponse,
-                        Type = q.Type,
-                        // 🔹 Recupero testo della domanda
-                        QuestionText = _slowFitContext.Questions
-                                    .Where(ques => ques.QuestionId == q.QuestionId)
-                                    .Select(ques => ques.QuestionString)
-                                    .FirstOrDefault(),
-                        // 🔽 Carico tutte le Answers legate al QuestionId
-                        Answers = _slowFitContext.Answers
-                                    .Where(a => a.QuestionId == q.QuestionId)
-                                    .Select(a => new AnswerRes
-                                    {
-                                        AnswerId = a.AnswerId,
-                                        AnswerString = a.AnswerString,
-                                    }).ToList()
-                    }).ToList();
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateQuiz(int id, [FromBody] QuizUserRes request) => this.ToActionResult(await _quizService.UpdateAsync(id, request));
 
-                if (quizList.Count == 0) return NoContent();
-
-                return Ok(quizList);
-            }
-            catch (Exception)
-            {
-                return BadRequest("An error occurred");
-            }
-        }
-
-        // GET: api/Quiz/5
-        [HttpGet("{id}")]
-        public ActionResult<QuizUserRes> GetQuiz(int id)
-        {
-            try
-            {
-                var quiz = _slowFitContext.Quizzes
-                    .Where(q => q.QuizId == id)
-                    .Select(q => new QuizUserResponse
-                    {
-                        QuizId = q.QuizId,
-                        QuestionId = q.QuestionId,
-                        Input = q.Input,
-                        InputTypeId = q.InputTypeId,
-                        SingleResponse = q.SingleResponse,
-                        Type = q.Type,
-                        QuestionText = q.Question.QuestionString, // assuming navigation property
-                        Answers = _slowFitContext.Answers
-                                    .Where(a => a.QuestionId == q.QuestionId)
-                                    .Select(a => new AnswerRes
-                                    {
-                                        AnswerId = a.AnswerId,
-                                        AnswerString = a.AnswerString,
-                                    }).ToList()
-                    })
-                    .FirstOrDefault();
-
-                if (quiz == null)
-                    return NotFound();
-
-                return Ok(quiz);
-            }
-            catch (Exception)
-            {
-                return BadRequest($"No quiz found with {id}");
-            }
-        }
-
-
-
-        // POST: api/Quiz
-        [HttpPost]
-        public ActionResult<QuizUserRes> CreateQuiz([FromBody] QuizUserRes quizDto)
-        {
-
-            if (quizDto == null)
-            {
-                return BadRequest("Invalid request body.");
-            }
-
-            if (quizDto.QuestionId <= 0 || quizDto.InputTypeId <= 0)
-            {
-                return BadRequest();
-            }
-
-
-            try
-            {
-                var qz = new Quiz()
-                {
-                    QuestionId = quizDto.QuestionId,
-                    InputTypeId = quizDto.InputTypeId,
-                    Input = quizDto.Input,
-                    SingleResponse = quizDto.SingleResponse
-                    
-                };
-                _slowFitContext.Quizzes.Add(qz);
-                _slowFitContext.SaveChanges();
-                return Ok("Quiz created successfully.");
-            }
-            catch (Exception)
-            {
-                return BadRequest($"Failed to create Quiz");
-            }
-        }
-
-        // PUT: api/Quiz/5
-        [HttpPut("{id}")]
-        public IActionResult UpdateQuiz(int id, [FromBody] QuizUserRes quizDto)
-        {
-            var quiz = _slowFitContext.Quizzes.Where(q => q.QuizId == id).FirstOrDefault();
-            if (quiz == null)
-            {
-                return NotFound();
-            }
-
-            quiz.QuestionId = quizDto.QuestionId;
-            quiz.InputTypeId = quizDto.InputTypeId;
-            quiz.Input = quizDto.Input;
-            quiz.SingleResponse = quizDto.SingleResponse;
-
-            try
-            {
-                _slowFitContext.Quizzes.Update(quiz);
-
-
-                _slowFitContext.SaveChanges();
-
-                return Ok("Quiz updated succesfully");
-            }
-            catch (Exception)
-            {
-                return BadRequest($"Failed to update quiz: {quiz.QuizId}");
-            }
-        }
-
-        // DELETE: api/Quiz/5
-        [HttpDelete("{id}")]
-        public IActionResult DeleteQuiz(int id)
-        {
-            var quiz = _slowFitContext.Quizzes.Where(q => q.QuizId == id).FirstOrDefault();
-            if (quiz == null)
-            {
-                return NotFound();
-            }
-
-            try
-            {
-                _slowFitContext.Quizzes.Remove(quiz);
-                _slowFitContext.SaveChanges();
-
-                return Ok($"Quiz has been successfully cancelled");
-            }
-            catch (Exception) 
-            { 
-                return BadRequest($"No quiz found whit {id}"); 
-            }
-        }
-    }
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteQuiz(int id) => this.ToActionResult(await _quizService.DeleteAsync(id));
 }

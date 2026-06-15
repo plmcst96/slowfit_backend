@@ -1,145 +1,27 @@
-﻿using System.Globalization;
 using Microsoft.AspNetCore.Mvc;
-using slowfit.DBModels;
 using slowfit.DTORequest;
+using slowfit.Services;
 
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+namespace slowfit.Controllers;
 
-namespace slowfit.Controllers
+[Route("slowFit/product")]
+[ApiController]
+public class ProductController(ICrudService<ProductRes> service) : ControllerBase
 {
-    [Route("slowFit/product")]
-    [ApiController]
-    public class ProductController(SlowFitContext slowFitCtx) : ControllerBase
-    {
-        private readonly SlowFitContext _slowFitContext = slowFitCtx ;
+    private readonly ICrudService<ProductRes> _service = service;
 
-        // GET: api/<ProductRes>
-        [HttpGet]
-        public ActionResult<IEnumerable<ProductRes>> GetAllProducts()
-        {
-            var productList = new List<ProductRes>();
-            try
-            {
+    [HttpGet]
+    public async Task<IActionResult> GetAllProducts() => this.ToActionResult(await _service.GetAllAsync());
 
-                 productList = _slowFitContext.Products.Select(p => new ProductRes
-                {
-                    Description = p.Description,
-                    Name = p.Name,
-                    ExpirationDate = p.ExpirationDate,
-                    ProductId = p.ProductId,
-                    Price = p.Price,
-                }).ToList();
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetSingleProduct(int id) => this.ToActionResult(await _service.GetByIdAsync(id));
 
-                if (productList.Count == 0) return NoContent();
+    [HttpPost]
+    public async Task<IActionResult> CreateProduct([FromBody] ProductRes request) => this.ToActionResult(await _service.CreateAsync(request));
 
-                return Ok(productList);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"An error occurred: {ex.Message}");
-            }
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateProduct(int id, [FromBody] ProductRes request) => this.ToActionResult(await _service.UpdateAsync(id, request));
 
-        }
-
-        // GET api/<ProductRes>/5
-        [HttpGet("{id}")]
-        public ActionResult<ProductRes> GetSingleProduct(int id)
-        {
-            try
-            {
-                var product = _slowFitContext.Products.Where(t => t.ProductId == id).FirstOrDefault();
-                if (product == null) return NotFound();
-
-                return Ok(product);
-            } catch (Exception)
-            {
-                return BadRequest("No product found");
-            }
-        }
-
-
-        [HttpPost]
-        public ActionResult CreateProduct([FromBody] ProductRes product)
-        {
-            if (product == null)
-            {
-                return BadRequest("Invalid request body.");
-            }
-
-            if (string.IsNullOrEmpty(product.Name) || product.Price == 0 || string.IsNullOrEmpty(product.Description))
-            {
-                return BadRequest();
-            }
-
-            if (product.ExpirationDate == default)
-            {
-                return BadRequest();
-            }
-
-            try
-            {
-                var prod = new Product()
-                {
-                    Description = product.Description,
-                    Name = product.Name,
-                    ExpirationDate = product.ExpirationDate.Date,
-                    Price = product.Price
-                };
-                _slowFitContext.Products.Add(prod);
-                _slowFitContext.SaveChanges();
-                return Ok("Product created successfully.");
-            }
-            catch (Exception)
-            {
-                return BadRequest($"Failed to create product");
-            }
-        }
-
-        [HttpPut("{id}")]
-        public IActionResult UpdateProduct(int id, [FromBody] ProductRes updatedProduct)
-        {
-            var product = _slowFitContext.Products.Where(p => p.ProductId == id).FirstOrDefault();
-            if (product == null) return NotFound();
-
-
-
-            product.ExpirationDate = updatedProduct.ExpirationDate.Date;
-            product.Name = updatedProduct.Name;
-            product.Price = updatedProduct.Price;
-            product.Description = updatedProduct.Description;
-           
-
-            try
-            {
-                _slowFitContext.Products.Update(product);
-
-
-                _slowFitContext.SaveChanges();
-
-                return NoContent();
-            }
-            catch (Exception)
-            {
-                return BadRequest($"Failed to update product: {updatedProduct.Name}");
-            }
-
-            }
-
-        [HttpDelete("{id}")]
-        public IActionResult DeleteProduct(int id)
-        {
-            var product = _slowFitContext.Products.Where(t => t.ProductId == id).FirstOrDefault();
-            if (product == null) return NotFound();
-            try
-            {
-                _slowFitContext.Products.Remove(product);
-                _slowFitContext.SaveChanges();
-                return NoContent();
-            }
-            catch (Exception) {
-                return BadRequest($"Error to delete product {product.Name} ");
-            }
-            
-        }
-    }
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteProduct(int id) => this.ToActionResult(await _service.DeleteAsync(id));
 }

@@ -5,7 +5,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using slowfit.DBModels;
+using slowfit.DTORequest;
 using slowfit.JWT;
+using slowfit.Services;
 using System.Text;
 
 namespace slowfit
@@ -138,6 +140,32 @@ namespace slowfit
             });
 
             builder.Services.AddAuthorization();
+            builder.Services.AddScoped<IRoleService, RoleService>();
+            builder.Services.AddScoped<ICrudService<TypeNutritionRes>, TypeNutritionService>();
+            builder.Services.AddScoped<ICrudService<CategoryOfDayRes>, CategoryOfDayService>();
+            builder.Services.AddScoped<ICrudService<DayWeekRes>, DayWeekService>();
+            builder.Services.AddScoped<ICrudService<BodyPartRes>, BodyPartService>();
+            builder.Services.AddScoped<ICrudService<LevelTrainingRes>, LevelTrainingService>();
+            builder.Services.AddScoped<ICrudService<LocationTrainingRes>, LocationTrainingService>();
+            builder.Services.AddScoped<ICrudService<InputTypeRes>, InputTypeService>();
+            builder.Services.AddScoped<ICrudService<PaymentTypeRes>, PaymentTypeService>();
+            builder.Services.AddScoped<ICrudService<TypePlanRes>, TypePlanService>();
+            builder.Services.AddScoped<ICrudService<TypeTrainingRes>, TypeTrainingService>();
+            builder.Services.AddScoped<IAuthService, AuthService>();
+            builder.Services.AddScoped<IUserRegistrationService, UserRegistrationService>();
+            builder.Services.AddScoped<IIngredientService, IngredientService>();
+            builder.Services.AddScoped<IExerciseService, ExerciseService>();
+            builder.Services.AddScoped<ICrudService<QuestionRes>, QuestionService>();
+            builder.Services.AddScoped<IAnswerService, AnswerService>();
+            builder.Services.AddScoped<IResponseQuizService, ResponseQuizService>();
+            builder.Services.AddScoped<ICrudService<ProductRes>, ProductService>();
+            builder.Services.AddScoped<IOrderService, OrderService>();
+            builder.Services.AddScoped<IBillingService, BillingService>();
+            builder.Services.AddScoped<IMeasureService, MeasureService>();
+            builder.Services.AddScoped<IDetailExerciseService, DetailExerciseService>();
+            builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<IQuizService, QuizService>();
+            builder.Services.AddScoped<IAppointmentService, AppointmentService>();
 
             var app = builder.Build();
 

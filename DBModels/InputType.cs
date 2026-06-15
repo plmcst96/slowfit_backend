@@ -9,5 +9,5 @@ public partial class InputType
 
     public string InputTypeName { get; set; } = null!;
 
-    public virtual ICollection<Quiz> Quizzes { get; set; } = new List<Quiz>();
+    public virtual ICollection<Quiz> Quizzes { get; set; } = [];
 }

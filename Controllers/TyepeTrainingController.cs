@@ -1,152 +1,27 @@
-﻿using System;
 using Microsoft.AspNetCore.Mvc;
-using slowfit.DBModels;
 using slowfit.DTORequest;
+using slowfit.Services;
 
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+namespace slowfit.Controllers;
 
-namespace slowfit.Controllers
+[Route("slowFit/type")]
+[ApiController]
+public class TyepeTrainingController(ICrudService<TypeTrainingRes> service) : ControllerBase
 {
-    [Route("slowFit/type")]
-    [ApiController]
-    public class TyepeTrainingController(SlowFitContext slowFitCtx) : ControllerBase
-    {
-        private readonly SlowFitContext _slowFitContext = slowFitCtx;
+    private readonly ICrudService<TypeTrainingRes> _service = service;
 
-       
-        [HttpGet]
-        public ActionResult<IEnumerable<TypeTrainingRes>> GetAll()
-        {
-            var typeList = new List<TypeTrainingRes>();
-            try
-            {
+    [HttpGet]
+    public async Task<IActionResult> GetAll() => this.ToActionResult(await _service.GetAllAsync());
 
-                typeList = _slowFitContext.TypeTrainigs.Select(p => new TypeTrainingRes
-                {
-                    TypeId = p.TypeId,
-                    TypeName = p.TypeName,
-                }).ToList();
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(int id) => this.ToActionResult(await _service.GetByIdAsync(id));
 
-                if (typeList.Count == 0) return NoContent();
+    [HttpPost]
+    public async Task<IActionResult> Post([FromBody] TypeTrainingRes request) => this.ToActionResult(await _service.CreateAsync(request));
 
-                return Ok(typeList);
-            }
-            catch (Exception)
-            {
-                return BadRequest($"An error occurred");
-            }
-        }
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Put(int id, [FromBody] TypeTrainingRes request) => this.ToActionResult(await _service.UpdateAsync(id, request));
 
-        [HttpGet("{id}")]
-        public ActionResult<TypeTrainingRes> GetById(int id)
-        {
-            try
-            {
-                var type = _slowFitContext.TypeTrainigs
-                    .Where(p => p.TypeId == id)
-                    .Select(p => new TypeTrainingRes
-                    {
-                        TypeId = p.TypeId,
-                        TypeName = p.TypeName,
-                    })
-                    .FirstOrDefault();
-
-                if (type == null)
-                {
-                    return NotFound($"No training type found with ID {id}");
-                }
-
-                return Ok(type);
-            }
-            catch (Exception)
-            {
-                return BadRequest("An error occurred while retrieving the training type.");
-            }
-        }
-
-
-        [HttpPost]
-        public IActionResult Post([FromBody] TypeTrainingRes typeT)
-        {
-            if (typeT == null)
-            {
-                return BadRequest("Data type incorrect");
-            }
-
-            if (string.IsNullOrEmpty(typeT.TypeName))
-            {
-                return BadRequest();
-            }
-            try
-            {
-                var type = new TypeTrainig()
-                {
-                    TypeName = typeT.TypeName,
-                };
-                _slowFitContext.TypeTrainigs.Add(type);
-                _slowFitContext.SaveChanges();
-                return Ok("Type training created successfully.");
-            }
-            catch (Exception)
-            {
-                return BadRequest($"Failed to create type");
-            }
-        }
-
-        [HttpPut("{id}")]
-        public IActionResult Put(int id, [FromBody] TypeTrainingRes typeT)
-        {
-            if (typeT == null || typeT.TypeId != id)
-            {
-                return BadRequest("Invalid data or ID does not match");
-            }
-
-            var existingType = _slowFitContext.TypeTrainigs.Where(u => u.TypeId == id).FirstOrDefault();
-            if (existingType == null)
-            {
-                return NotFound("Plan not found");
-            }
-
-            // Aggiorna i dati
-            existingType.TypeName = typeT.TypeName;
-
-
-            try
-            {
-                _slowFitContext.TypeTrainigs.Update(existingType);
-
-
-                _slowFitContext.SaveChanges();
-
-                return Ok("Training type updated succesfully");
-            }
-            catch (Exception)
-            {
-                return BadRequest($"Failed to update type: {typeT.TypeName}");
-            }
-        }
-
-        // DELETE api/<TyepeTrainingController>/5
-        [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
-        {
-            var typeT = _slowFitContext.TypeTrainigs.Where(u => u.TypeId == id).FirstOrDefault();
-
-            if (typeT == null)
-            {
-                return NotFound(new { message = "Type not found" });
-            }
-
-            try
-            {
-                _slowFitContext.TypeTrainigs.Remove(typeT);
-                _slowFitContext.SaveChanges();
-                return Ok("Type delete succesfully");
-            }
-            catch (Exception)
-            {
-                return BadRequest($"Error to delete plan {typeT.TypeName} ");
-            }
-        }
-    }
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id) => this.ToActionResult(await _service.DeleteAsync(id));
 }

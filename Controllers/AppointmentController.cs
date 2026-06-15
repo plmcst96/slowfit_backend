@@ -1,254 +1,36 @@
-﻿using System.Globalization;
 using Microsoft.AspNetCore.Mvc;
-using slowfit.DBModels;
 using slowfit.DTORequest;
-using slowfit.DTOResponse;
+using slowfit.Services;
 
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+namespace slowfit.Controllers;
 
-namespace slowfit.Controllers
+[Route("slowFit/appointment")]
+[ApiController]
+public class AppointmentController(IAppointmentService appointmentService) : ControllerBase
 {
-    [Route("slowFit/appointment")]
-    [ApiController]
-    public class AppointmentController(SlowFitContext slowFitContext) : ControllerBase
-    {
-        private readonly SlowFitContext _slowFitContext = slowFitContext;
+    private readonly IAppointmentService _appointmentService = appointmentService;
 
-        // GET: api/<AppointmentController>
-        [HttpGet]
-        public ActionResult<IEnumerable<AppointmentRes>> Get()
-        {
-            var appointmentList = new List<AppointmentRes>();
-            try
-            {
+    [HttpGet]
+    public async Task<IActionResult> Get() => this.ToActionResult(await _appointmentService.GetAllAsync());
 
-                appointmentList = _slowFitContext.Appointments.Select(t => new AppointmentRes
-                {
-                    AppointmentId = t.AppointmentId,
-                    Date = t.Date,
-                    PtId = t.PtId,
-                    Description = t.Description,
-                    Duration = t.Duration,
-                    UserId = t.UserId,
-                    CallUrl = t.CallUrl
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetSingleAppointment(int id) => this.ToActionResult(await _appointmentService.GetResponseByIdAsync(id));
 
-                }).ToList();
+    [HttpGet("byUser/{userId}")]
+    public async Task<IActionResult> GetAppointmentByUserId(int userId) => this.ToActionResult(await _appointmentService.GetByUserAsync(userId));
 
+    [HttpGet("byDate/{date}")]
+    public async Task<IActionResult> GetAppointmentByDate(DateTime date) => this.ToActionResult(await _appointmentService.GetByDateAsync(date));
 
-                if (appointmentList.Count == 0) return NoContent();
+    [HttpGet("byPT/{ptId}")]
+    public async Task<IActionResult> GetAppointmentByPtId(int ptId) => this.ToActionResult(await _appointmentService.GetByPtAsync(ptId));
 
-                return Ok(appointmentList);
-            }
-            catch (Exception)
-            {
-                return BadRequest($"An error occurred");
-            };
-        }
+    [HttpPost]
+    public async Task<IActionResult> CreateAppointment([FromBody] AppointmentRes request) => this.ToActionResult(await _appointmentService.CreateAsync(request));
 
-        // GET api/<AppointmentController>/5
-        [HttpGet("{id}")]
-        public ActionResult<AppointmentResponse> GetSingleAppointment(int id)
-        {
-            try
-            {
-                var appointment = _slowFitContext.Appointments
-                    .Where(t => t.AppointmentId == id)
-                    .Join(_slowFitContext.Users,
-                          a => a.UserId,
-                          u => u.UserId,
-                          (a, u) => new AppointmentResponse
-                          {
-                              AppointmentId = a.AppointmentId,
-                              Date = a.Date,
-                              PtId = a.PtId,
-                              Description = a.Description,
-                              Duration = a.Duration,
-                              CallUrl = a.CallUrl,
-                              UserId = a.UserId,
-                              UserFullName = u.FirstName + " " + u.Surname,
-                              UserEmail = u.Email,
-                              UserPhone = u.Phone
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateAppointment(int id, [FromBody] AppointmentRes request) => this.ToActionResult(await _appointmentService.UpdateAsync(id, request));
 
-                          })
-                    .FirstOrDefault();
-                if (appointment == null) return NotFound();
-                return Ok(appointment);
-            }
-            catch (Exception)
-            {
-                return BadRequest($"No appointment found with {id}");
-            }
-        }
-
-        [HttpGet("byUser/{userId}")]
-        public ActionResult<AppointmentRes> GetAppointmentByUserId(int userId)
-        {
-            try
-            {
-                var appointment = _slowFitContext.Appointments.Where(a => a.UserId == userId).FirstOrDefault();
-                if (appointment == null) return NotFound();
-                return Ok(appointment);
-            }
-            catch (Exception)
-            {
-                return BadRequest($"No appointment found for {userId}");
-            }
-        }
-
-        [HttpGet("byDate/{date}")]
-        public ActionResult<IEnumerable<AppointmentRes>> GetAppointmentByDate(DateTime date)
-        {
-            try
-            {
-                var appointments = _slowFitContext.Appointments
-                    .Where(a => a.Date.Date == date.Date)
-                    .Select(a => new AppointmentRes
-                    {
-                        AppointmentId = a.AppointmentId,
-                        Date = a.Date,
-                        PtId = a.PtId,
-                        Description = a.Description,
-                        Duration = a.Duration,
-                        UserId = a.UserId,
-                        CallUrl = a.CallUrl
-                    })
-                    .ToList();
-
-                return appointments.Any() ? Ok(appointments) : NoContent();
-            }
-            catch
-            {
-                return BadRequest($"No appointment found for {date}");
-            }
-        }
-
-        [HttpGet("byPT/{ptId}")]
-        public ActionResult<IEnumerable<AppointmentResponse>> GetAppointmentByPtId(int ptId)
-        {
-            try
-            {
-                var appointmentList = _slowFitContext.Appointments
-                    .Where(a => a.PtId == ptId)
-                    .Join(_slowFitContext.Users,
-                          a => a.UserId,
-                          u => u.UserId,
-                          (a, u) => new AppointmentResponse
-                          {
-                              AppointmentId = a.AppointmentId,
-                              Date = a.Date,
-                              PtId = a.PtId,
-                              Description = a.Description,
-                              Duration = a.Duration,
-                              CallUrl = a.CallUrl,
-                              UserId = a.UserId,
-                              UserFullName = u.FirstName + " " + u.Surname,
-                              UserEmail = u.Email,
-                              UserPhone = u.Phone
-
-                          })
-        
-                    .ToList();
-
-                return appointmentList.Any() ? Ok(appointmentList) : NoContent();
-            }
-            catch
-            {
-                return BadRequest("An error occurred");
-            }
-        }
-
-
-
-        // POST api/<AppointmentController>
-        [HttpPost]
-        public IActionResult CreateAppointment([FromBody] AppointmentRes appointment)
-        {
-            if (appointment == null)
-            {
-                return BadRequest("Invalid request body.");
-            }
-
-            Console.WriteLine($"CallUrl Received: {appointment.CallUrl}"); // DEBUG
-
-            if (appointment.PtId <= 0 ||
-                string.IsNullOrEmpty(appointment.Description) ||
-                appointment.UserId <= 0 ||
-                appointment.Duration <= 0 || string.IsNullOrEmpty(appointment.CallUrl))
-            {
-                return BadRequest();
-            }
-
-            try
-            {
-                var app = new Appointment()
-                {
-                    Date = appointment.Date,
-                    PtId = appointment.PtId,
-                    Description = appointment.Description,
-                    Duration = appointment.Duration,
-                    UserId = appointment.UserId,
-                    CallUrl = appointment.CallUrl // Verifica se qui è ancora null
-                };
-
-                Console.WriteLine($"CallUrl Saved in DB: {app.CallUrl}"); // DEBUG
-
-                _slowFitContext.Appointments.Add(app);
-                _slowFitContext.SaveChanges();
-                return Ok(new { message = "Appointment created successfully." });
-            }
-            catch (Exception)
-            {
-                return BadRequest("Failed to create appointment");
-            }
-        }
-
-
-        // PUT api/<AppointmentController>/5
-        [HttpPut("{id}")]
-        public IActionResult UpdateAppointment(int id, [FromBody] AppointmentRes updateApp)
-        {
-            var appointment = _slowFitContext.Appointments.Where(t => t.AppointmentId == id).FirstOrDefault();
-            if (appointment == null) return NotFound();
-
-            appointment.Date = updateApp.Date;
-            appointment.PtId = updateApp.PtId;
-            appointment.Description = updateApp.Description;
-            appointment.CallUrl = updateApp.CallUrl;
-            appointment.Duration = updateApp.Duration;
-            appointment.UserId = updateApp.UserId;
-            try
-            {
-                _slowFitContext.Appointments.Update(appointment);
-
-
-                _slowFitContext.SaveChanges();
-
-                return Ok(new { message = "Appointment updated succesfully" });
-            }
-            catch (Exception)
-            {
-                return BadRequest($"Failed to update appointment: {updateApp.AppointmentId}");
-            }
-        }
-
-        // DELETE api/<AppointmentController>/5
-        [HttpDelete("{id}")]
-        public IActionResult DeleteAppointment(int id)
-        {
-            var app = _slowFitContext.Appointments.Where(t => t.AppointmentId == id).FirstOrDefault();
-            if (app == null) return NotFound();
-
-            try
-            {
-                _slowFitContext.Appointments.Remove(app);
-                _slowFitContext.SaveChanges();
-
-                return Ok($"The appointment has been successfully cancelled");
-            }
-            catch (Exception)
-            {
-                return BadRequest($"No appointment found whit {id}");
-            }
-        }
-    }
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteAppointment(int id) => this.ToActionResult(await _appointmentService.DeleteAsync(id));
 }

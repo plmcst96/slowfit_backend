@@ -1,124 +1,29 @@
-﻿using System;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using slowfit.DBModels;
 using slowfit.DTORequest;
+using slowfit.Services;
 
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+namespace slowfit.Controllers;
 
-namespace slowfit.Controllers
+[AllowAnonymous]
+[Route("slowFit/question")]
+[ApiController]
+public class QuestionController(ICrudService<QuestionRes> service) : ControllerBase
 {
-    [Route("slowFit/question")]
-    [ApiController]
-    public class QuestionController(SlowFitContext slowFitCtx) : ControllerBase
-    {
-        private readonly SlowFitContext _slowFitContext = slowFitCtx;
+    private readonly ICrudService<QuestionRes> _service = service;
 
-        [HttpGet]
-        public ActionResult<IEnumerable<QuestionRes>> GetQuestions()
-        {
-            var questionList = new List<QuestionRes>();
-            try
-            {
+    [HttpGet]
+    public async Task<IActionResult> GetQuestions() => this.ToActionResult(await _service.GetAllAsync());
 
-                questionList = _slowFitContext.Questions.Select(p => new QuestionRes
-                {
-                    QuestionId = p.QuestionId,
-                    QuestionString = p.QuestionString,
-                   
-                }).ToList();
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetQuestionById(int id) => this.ToActionResult(await _service.GetByIdAsync(id));
 
-                if (questionList.Count == 0) return NoContent();
+    [HttpPost]
+    public async Task<IActionResult> CreateQuestion([FromBody] QuestionRes request) => this.ToActionResult(await _service.CreateAsync(request));
 
-                return Ok(questionList);
-            }
-            catch (Exception)
-            {
-                return BadRequest($"An error occurred");
-            }
-        }
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateQuestion(int id, [FromBody] QuestionRes request) => this.ToActionResult(await _service.UpdateAsync(id, request));
 
-        [HttpGet("{id}")]
-        public ActionResult<QuestionRes> GetQuestionById(int id)
-        {
-            try
-            {
-                var question = _slowFitContext.Questions.Where(q => q.QuestionId == id).FirstOrDefault();
-                if (question == null) return NotFound();
-                return Ok(question);
-            }
-            catch (Exception)
-            {
-                return BadRequest($"No question found with {id}");
-            }
-            
-        }
-
-        [HttpPost]
-        public ActionResult<QuestionRes> CreateQuestion([FromBody] QuestionRes question)
-        {
-            if (question == null)
-            {
-                return BadRequest("Data plan incorrect");
-            }
-
-            if (string.IsNullOrEmpty(question.QuestionString))
-            {
-                return BadRequest();
-            }
-            try
-            {
-                var ques = new Question()
-                {
-                    QuestionString = question.QuestionString
-                };
-                _slowFitContext.Questions.Add(ques);
-                _slowFitContext.SaveChanges();
-                return Ok("Question created successfully.");
-            }
-            catch (Exception)
-            {
-                return BadRequest($"Failed to create question");
-            }
-        }
-
-        [HttpPut("{id}")]
-        public IActionResult UpdateQuestion(int id, [FromBody] QuestionRes updatedQuestion)
-        {
-            var question = _slowFitContext.Questions.Where(q => q.QuestionId == id).FirstOrDefault();
-            if (question == null) return NotFound();
-
-            question.QuestionString = updatedQuestion.QuestionString;
-
-            try
-            {
-                _slowFitContext.Questions.Update(question);
-
-
-                _slowFitContext.SaveChanges();
-
-                return Ok("Question updated succesfully");
-            }
-            catch (Exception)
-            {
-                return BadRequest($"Failed to update question: {updatedQuestion.QuestionId}");
-            }
-        }
-
-        [HttpDelete("{id}")]
-        public IActionResult DeleteQuestion(int id)
-        {
-            var question = _slowFitContext.Questions.Where(q => q.QuestionId == id).FirstOrDefault();
-            if (question == null) return NotFound();
-            try
-            {
-                _slowFitContext.Questions.Remove(question);
-                _slowFitContext.SaveChanges();
-                return Ok("Question delete succesfully");
-            }
-            catch (Exception)
-            {
-                return BadRequest($"Error to delete question {id} ");
-            }
-        }
-    }
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteQuestion(int id) => this.ToActionResult(await _service.DeleteAsync(id));
 }
