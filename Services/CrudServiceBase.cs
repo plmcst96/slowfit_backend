@@ -44,7 +44,7 @@ public abstract class CrudServiceBase<TEntity, TDto>(DbContext dbContext) : ICru
     {
         if (!IsValid(request))
         {
-            return ServiceResult<TDto>.BadRequest($"invalid_{EntityCode}", $"Invalid {EntityName} data.");
+            return ServiceResult<TDto>.BadRequest($"invalid_{EntityCode}", "I dati inviati non sono validi. Controlla i campi e riprova.");
         }
 
         var entity = CreateEntity(request);
@@ -58,13 +58,13 @@ public abstract class CrudServiceBase<TEntity, TDto>(DbContext dbContext) : ICru
     {
         if (!IsValid(request) || GetDtoId(request) != id)
         {
-            return ServiceResult<TDto>.BadRequest($"invalid_{EntityCode}", "Invalid data or ID does not match.");
+            return ServiceResult<TDto>.BadRequest($"invalid_{EntityCode}", "I dati inviati non corrispondono alla risorsa da aggiornare.");
         }
 
         var entity = await FindByIdAsync(id);
         if (entity == null)
         {
-            return ServiceResult<TDto>.NotFound($"{EntityCode}_not_found", $"{EntityName} not found.");
+            return ServiceResult<TDto>.NotFound($"{EntityCode}_not_found", "Risorsa non trovata.");
         }
 
         UpdateEntity(entity, request);
@@ -78,7 +78,7 @@ public abstract class CrudServiceBase<TEntity, TDto>(DbContext dbContext) : ICru
         var entity = await FindByIdAsync(id);
         if (entity == null)
         {
-            return ServiceResult<object>.NotFound($"{EntityCode}_not_found", $"{EntityName} not found.");
+            return ServiceResult<object>.NotFound($"{EntityCode}_not_found", "Risorsa non trovata.");
         }
 
         Set.Remove(entity);

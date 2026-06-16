@@ -43,11 +43,11 @@ public sealed class UserService(SlowFitContext slowFitContext) : IUserService
     {
         if (request == null || string.IsNullOrWhiteSpace(request.Address) || string.IsNullOrWhiteSpace(request.City) || string.IsNullOrWhiteSpace(request.Country) || string.IsNullOrWhiteSpace(request.Province) || request.ZipCode == 0 || request.BirthDate == null)
         {
-            return ServiceResult<object>.BadRequest("invalid_profile", "Missing required profile fields.");
+            return ServiceResult<object>.BadRequest("invalid_profile", "Compila tutti i campi obbligatori del profilo.");
         }
 
         var user = await _slowFitContext.Users.FirstOrDefaultAsync(u => u.UserId == userId);
-        if (user == null) return ServiceResult<object>.NotFound("user_not_found", "User not found.");
+        if (user == null) return ServiceResult<object>.NotFound("user_not_found", "Utente non trovato.");
 
         user.Address = request.Address;
         user.City = request.City;
@@ -66,11 +66,11 @@ public sealed class UserService(SlowFitContext slowFitContext) : IUserService
     {
         if (request == null || request.UserId != userId)
         {
-            return ServiceResult<object>.BadRequest("invalid_user", "Invalid data or ID does not match.");
+            return ServiceResult<object>.BadRequest("invalid_user", "I dati utente non sono validi.");
         }
 
         var user = await _slowFitContext.Users.FirstOrDefaultAsync(u => u.UserId == userId);
-        if (user == null) return ServiceResult<object>.NotFound("user_not_found", "User not found.");
+        if (user == null) return ServiceResult<object>.NotFound("user_not_found", "Utente non trovato.");
 
         user.FirstName = request.FirstName;
         user.Surname = request.Surname;
@@ -90,7 +90,7 @@ public sealed class UserService(SlowFitContext slowFitContext) : IUserService
     public async Task<ServiceResult<object>> DeleteAsync(int userId)
     {
         var user = await _slowFitContext.Users.FirstOrDefaultAsync(u => u.UserId == userId);
-        if (user == null) return ServiceResult<object>.NotFound("user_not_found", "User not found.");
+        if (user == null) return ServiceResult<object>.NotFound("user_not_found", "Utente non trovato.");
 
         await using var transaction = await _slowFitContext.Database.BeginTransactionAsync();
 

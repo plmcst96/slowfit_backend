@@ -21,13 +21,13 @@ public sealed class NotificationService(SlowFitContext slowFitContext, IHttpClie
     {
         if (request == null || request.UserId <= 0 || string.IsNullOrWhiteSpace(request.FcmToken))
         {
-            return ServiceResult<object>.BadRequest("invalid_fcm_token", "User id and FCM token are required.");
+            return ServiceResult<object>.BadRequest("invalid_fcm_token", "Token notifiche non valido.");
         }
 
         var user = await _slowFitContext.Users.FirstOrDefaultAsync(u => u.UserId == request.UserId);
         if (user == null)
         {
-            return ServiceResult<object>.NotFound("user_not_found", "User not found.");
+            return ServiceResult<object>.NotFound("user_not_found", "Utente non trovato.");
         }
 
         user.FcmToken = request.FcmToken.Trim();
@@ -39,18 +39,18 @@ public sealed class NotificationService(SlowFitContext slowFitContext, IHttpClie
     {
         if (request == null || request.ClientId <= 0 || string.IsNullOrWhiteSpace(request.Title) || string.IsNullOrWhiteSpace(request.Body))
         {
-            return ServiceResult<NotificationSendResponse>.BadRequest("invalid_notification", "Client id, title and body are required.");
+            return ServiceResult<NotificationSendResponse>.BadRequest("invalid_notification", "Titolo e messaggio della notifica sono obbligatori.");
         }
 
         var client = await _slowFitContext.Users.FirstOrDefaultAsync(u => u.UserId == request.ClientId);
         if (client == null)
         {
-            return ServiceResult<NotificationSendResponse>.NotFound("client_not_found", "Client not found.");
+            return ServiceResult<NotificationSendResponse>.NotFound("client_not_found", "Cliente non trovato.");
         }
 
         if (!client.PtId.HasValue)
         {
-            return ServiceResult<NotificationSendResponse>.BadRequest("trainer_not_assigned", "Client has no assigned trainer.");
+            return ServiceResult<NotificationSendResponse>.BadRequest("trainer_not_assigned", "Il cliente non ha un personal trainer assegnato.");
         }
 
         var data = ToStringDictionary(request.Data);
@@ -64,7 +64,7 @@ public sealed class NotificationService(SlowFitContext slowFitContext, IHttpClie
     {
         if (request == null || request.ClientId <= 0 || string.IsNullOrWhiteSpace(request.Title) || string.IsNullOrWhiteSpace(request.Body))
         {
-            return ServiceResult<NotificationSendResponse>.BadRequest("invalid_notification", "Client id, title and body are required.");
+            return ServiceResult<NotificationSendResponse>.BadRequest("invalid_notification", "Cliente, titolo e messaggio della notifica sono obbligatori.");
         }
 
         var data = ToStringDictionary(request.Data);
@@ -98,12 +98,12 @@ public sealed class NotificationService(SlowFitContext slowFitContext, IHttpClie
         var notification = await _slowFitContext.NotificationsFires.FirstOrDefaultAsync(n => n.Id == notificationId);
         if (notification == null)
         {
-            return ServiceResult<object>.NotFound("notification_not_found", "Notification not found.");
+            return ServiceResult<object>.NotFound("notification_not_found", "Notifica non trovata.");
         }
 
         if (notification.ReceiverId != requesterId)
         {
-            return ServiceResult<object>.Unauthorized("notification_forbidden", "You cannot delete this notification.");
+            return ServiceResult<object>.Unauthorized("notification_forbidden", "Non puoi eliminare questa notifica.");
         }
 
         _slowFitContext.NotificationsFires.Remove(notification);
@@ -116,7 +116,7 @@ public sealed class NotificationService(SlowFitContext slowFitContext, IHttpClie
         var receiver = await _slowFitContext.Users.FirstOrDefaultAsync(u => u.UserId == receiverId);
         if (receiver == null)
         {
-            return ServiceResult<NotificationSendResponse>.NotFound("receiver_not_found", "Notification receiver not found.");
+            return ServiceResult<NotificationSendResponse>.NotFound("receiver_not_found", "Destinatario della notifica non trovato.");
         }
 
         var notification = new NotificationsFire

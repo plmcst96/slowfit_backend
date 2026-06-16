@@ -59,7 +59,7 @@ public class UserController(IUserService userService, INotificationService notif
     [HttpPost("update-fcm-token")]
     public async Task<IActionResult> UpdateFcmToken([FromBody] UpdateFcmTokenRequest request)
     {
-        if (request == null) return BadRequest();
+        if (request == null) return this.ApiBadRequest("invalid_fcm_token", "Token notifiche non valido.");
         if (!User.CanAccessUser(request.UserId)) return Forbid();
         return this.ToActionResult(await _notificationService.UpdateFcmTokenAsync(request));
     }

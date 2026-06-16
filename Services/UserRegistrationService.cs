@@ -19,12 +19,12 @@ public sealed class UserRegistrationService(SlowFitContext slowFitContext) : IUs
             string.IsNullOrWhiteSpace(request.Password) ||
             request.RoleId <= 0)
         {
-            return ServiceResult<UserRegisterResponse>.BadRequest("invalid_registration", "All fields are required.");
+            return ServiceResult<UserRegisterResponse>.BadRequest("invalid_registration", "Compila tutti i campi obbligatori.");
         }
 
         if (await _slowFitContext.Users.AnyAsync(u => u.Email == request.Email))
         {
-            return ServiceResult<UserRegisterResponse>.Conflict("email_in_use", "Email is already in use.");
+            return ServiceResult<UserRegisterResponse>.Conflict("email_in_use", "Questa email è già registrata.");
         }
 
         var user = new User

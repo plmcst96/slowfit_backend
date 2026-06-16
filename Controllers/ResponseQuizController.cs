@@ -37,7 +37,7 @@ public class ResponseQuizController(IResponseQuizService responseQuizService) : 
         }
         catch (JsonException)
         {
-            return BadRequest(new { code = "invalid_response_quiz", message = "Invalid response quiz payload." });
+            return this.ApiBadRequest("invalid_response_quiz", "Le risposte del quiz non sono valide. Riprova.");
         }
     }
 

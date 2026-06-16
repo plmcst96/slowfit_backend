@@ -41,7 +41,7 @@ namespace slowfit.Controllers
             }
             catch (Exception)
             {
-                return BadRequest( $"An error occurred");
+                return this.ApiServerError("training_fetch_failed", "Non è stato possibile caricare gli allenamenti. Riprova.");
             }
         }
 
@@ -55,8 +55,8 @@ namespace slowfit.Controllers
                 if (!User.CanAccessUser(training.UserId)) return Forbid();
                 return Ok(training);
             }
-            catch (Exception) { 
-                return BadRequest($"No training found with {id}");
+            catch (Exception) {
+                return this.ApiNotFound("training_not_found", "Allenamento non trovato.");
             }
             
         }
@@ -73,7 +73,7 @@ namespace slowfit.Controllers
             }
             catch (Exception)
             {
-                return BadRequest($"No trainings found in this date {date}.");
+                return this.ApiServerError("training_fetch_failed", "Non è stato possibile caricare gli allenamenti per questa data.");
             }
             
         }
@@ -93,7 +93,7 @@ namespace slowfit.Controllers
                 return Ok(filteredTrainings);
             }
             catch (Exception) {
-                return BadRequest();
+                return this.ApiServerError("training_fetch_failed", "Non è stato possibile caricare gli allenamenti nel periodo selezionato.");
             }
 
             
@@ -134,7 +134,7 @@ namespace slowfit.Controllers
             }
             catch (Exception)
             {
-                return BadRequest("An error occurred while fetching trainings for user.");
+                return this.ApiServerError("training_fetch_failed", "Non è stato possibile caricare gli allenamenti dell'utente.");
             }
         }
 
@@ -208,7 +208,7 @@ namespace slowfit.Controllers
             catch (Exception)
             {
                 // Log dell'errore se vuoi
-                return StatusCode(500, "Si è verificato un errore durante la creazione dell'allenamento.");
+                return this.ApiServerError("training_create_failed", "Non è stato possibile creare l'allenamento. Riprova.");
             }
         }
 
@@ -222,7 +222,7 @@ namespace slowfit.Controllers
                 .Include(t => t.DetailExercises)
                 .FirstOrDefault(t => t.TrainingId == id);
 
-            if (training == null) return NotFound();
+            if (training == null) return this.ApiNotFound("training_not_found", "Allenamento non trovato.");
             if (!User.CanAccessUser(training.UserId) || !User.CanAccessUser(updatedTraining.UserId)) return Forbid();
 
             // Aggiorno i campi principali
@@ -257,7 +257,7 @@ namespace slowfit.Controllers
             }
             catch (Exception)
             {
-                return BadRequest($"Failed to update training: {updatedTraining.TrainingId}");
+                return this.ApiServerError("training_update_failed", "Non è stato possibile aggiornare l'allenamento. Riprova.");
             }
         }
 
@@ -268,7 +268,7 @@ namespace slowfit.Controllers
                 .Include(t => t.DetailExercises) // includi i dettagli
                 .FirstOrDefault(t => t.TrainingId == id);
 
-            if (training == null) return NotFound();
+            if (training == null) return this.ApiNotFound("training_not_found", "Allenamento non trovato.");
             if (!User.CanAccessUser(training.UserId)) return Forbid();
 
             try
@@ -286,7 +286,7 @@ namespace slowfit.Controllers
             }
             catch (Exception)
             {
-                return BadRequest($"Failed to delete training with id {id}.");
+                return this.ApiServerError("training_delete_failed", "Non è stato possibile eliminare l'allenamento. Riprova.");
             }
         }
 

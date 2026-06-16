@@ -1,11 +1,13 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using slowfit.DBModels;
 using slowfit.DTORequest;
+using slowfit.DTOResponse;
 using slowfit.JWT;
 using slowfit.Services;
 using System.Text;
@@ -40,6 +42,26 @@ namespace slowfit
             builder.Services.AddControllers(options =>
             {
                 options.Filters.Add(new AuthorizeFilter());
+            });
+            builder.Services.Configure<ApiBehaviorOptions>(options =>
+            {
+                options.InvalidModelStateResponseFactory = context =>
+                {
+                    var errors = context.ModelState
+                        .Where(entry => entry.Value?.Errors.Count > 0)
+                        .SelectMany(entry => entry.Value!.Errors.Select(error => error.ErrorMessage))
+                        .Where(message => !string.IsNullOrWhiteSpace(message))
+                        .ToArray();
+
+                    return new BadRequestObjectResult(new ApiErrorResponse
+                    {
+                        Code = "invalid_request",
+                        Message = errors.Length == 0
+                            ? "I dati inviati non sono validi. Controlla i campi e riprova."
+                            : string.Join(" ", errors),
+                        TraceId = context.HttpContext.TraceIdentifier
+                    });
+                };
             });
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(options =>
@@ -172,6 +194,53 @@ namespace slowfit
             builder.Services.AddScoped<IProgressNutritionService, ProgressNutritionService>();
 
             var app = builder.Build();
+
+            app.Use(async (context, next) =>
+            {
+                try
+                {
+                    await next();
+                }
+                catch (Exception ex)
+                {
+                    app.Logger.LogError(ex, "Unhandled exception while processing request {TraceId}", context.TraceIdentifier);
+
+                    if (!context.Response.HasStarted)
+                    {
+                        context.Response.Clear();
+                        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                        context.Response.ContentType = "application/json";
+                        await context.Response.WriteAsJsonAsync(new ApiErrorResponse
+                        {
+                            Code = "server_error",
+                            Message = "Si è verificato un errore del server. Riprova tra poco.",
+                            TraceId = context.TraceIdentifier
+                        });
+                    }
+                }
+            });
+
+            app.UseStatusCodePages(async statusCodeContext =>
+            {
+                var response = statusCodeContext.HttpContext.Response;
+                if (response.HasStarted || response.ContentLength.HasValue || !string.IsNullOrWhiteSpace(response.ContentType)) return;
+
+                var (code, message) = response.StatusCode switch
+                {
+                    StatusCodes.Status401Unauthorized => ("unauthorized", "Sessione scaduta o non valida. Effettua di nuovo il login."),
+                    StatusCodes.Status403Forbidden => ("forbidden", "Non hai i permessi per eseguire questa operazione."),
+                    StatusCodes.Status404NotFound => ("not_found", "Risorsa non trovata."),
+                    _ => ("http_error", $"Errore del server ({response.StatusCode}).")
+                };
+
+                response.ContentType = "application/json";
+                await response.WriteAsJsonAsync(new ApiErrorResponse
+                {
+                    Code = code,
+                    Message = message,
+                    TraceId = statusCodeContext.HttpContext.TraceIdentifier
+                });
+            });
 
             if (app.Environment.IsDevelopment())
             {

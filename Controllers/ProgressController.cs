@@ -43,7 +43,7 @@ public class ProgressController(IProgressTrainingService progressTrainingService
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] ProgressTrainingRes request)
     {
-        if (request == null) return BadRequest();
+        if (request == null) return this.ApiBadRequest("invalid_progress_training", "I dati del progresso allenamento sono obbligatori.");
         if (!User.CanAccessUser(request.UserId)) return Forbid();
         return this.ToActionResult(await _progressTrainingService.CreateAsync(request));
     }
@@ -51,7 +51,7 @@ public class ProgressController(IProgressTrainingService progressTrainingService
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, [FromBody] ProgressTrainingRes request)
     {
-        if (request == null) return BadRequest();
+        if (request == null) return this.ApiBadRequest("invalid_progress_training", "I dati del progresso allenamento sono obbligatori.");
         if (!User.CanAccessUser(request.UserId)) return Forbid();
         return this.ToActionResult(await _progressTrainingService.UpdateAsync(id, request));
     }

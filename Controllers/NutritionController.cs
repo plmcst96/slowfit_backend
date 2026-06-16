@@ -128,24 +128,24 @@ namespace slowfit.Controllers
         {
             // Controllo base: request null
             if (request == null)
-                return BadRequest(new { message = "Richiesta nulla." });
+                return this.ApiBadRequest("invalid_nutrition", "I dati del piano nutrizionale sono obbligatori.");
 
             // Controllo proprietà principali
             if (request.UserId <= 0)
-                return BadRequest(new { message = "UserId non valido." });
+                return this.ApiBadRequest("invalid_user", "Utente non valido.");
 
             if (request.TypeNutritionId <= 0)
-                return BadRequest(new { message = "TypeNutritionId non valido." });
+                return this.ApiBadRequest("invalid_nutrition_type", "Tipo nutrizione non valido.");
 
             if (request.TotDailyCalories <= 0)
-                return BadRequest(new { message = "TotDailyCalories non valido." });
+                return this.ApiBadRequest("invalid_calories", "Le calorie giornaliere devono essere maggiori di zero.");
 
             // Controllo pasti
             if (request.Meals == null || request.Meals.Count == 0)
-                return BadRequest(new { message = "Nessun pasto fornito." });
+                return this.ApiBadRequest("missing_meals", "Aggiungi almeno un pasto al piano nutrizionale.");
 
             if (request.Meals.Any(m => m.MealId <= 0 || m.DayId <= 0))
-                return BadRequest(new { message = "Uno o più pasti contengono MealId o DayId non validi." });
+                return this.ApiBadRequest("invalid_meals", "Uno o più pasti selezionati non sono validi.");
 
             // Controllo date
             if (request.CreationDate == default)
@@ -154,11 +154,11 @@ namespace slowfit.Controllers
             // Optional: verifica esistenza utente e tipo nutrizione nel DB
             var userExists = await _slowFitContext.Users.AnyAsync(u => u.UserId == request.UserId);
             if (!userExists)
-                return BadRequest(new { message = "Utente non trovato." });
+                return this.ApiBadRequest("user_not_found", "Utente non trovato.");
 
             var typeExists = await _slowFitContext.TypeNutritions.AnyAsync(t => t.TypeNutritionId == request.TypeNutritionId);
             if (!typeExists)
-                return BadRequest(new { message = "Tipo nutrizione non trovato." });
+                return this.ApiBadRequest("nutrition_type_not_found", "Tipo nutrizione non trovato.");
 
             // Creazione oggetto Nutrition
             var nutrition = new Nutrition
@@ -181,15 +181,14 @@ namespace slowfit.Controllers
                 await _slowFitContext.SaveChangesAsync();
                 return Ok(new { message = "Piano nutrizionale creato con successo.", nutritionId = nutrition.NutritionId });
             }
-            catch (DbUpdateException dbEx)
+            catch (DbUpdateException)
             {
                 // Eccezione specifica EF Core
-                var innerMessage = dbEx.InnerException?.Message ?? dbEx.Message;
-                return StatusCode(500, new { message = "Errore nel database durante la creazione del piano.", details = innerMessage });
+                return this.ApiServerError("nutrition_save_failed", "Non è stato possibile salvare il piano nutrizionale. Riprova.");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return StatusCode(500, new { message = "Errore interno del server.", details = ex.Message });
+                return this.ApiServerError();
             }
         }
 
@@ -202,7 +201,7 @@ namespace slowfit.Controllers
                 .Include(n => n.NutritionMeals)
                 .FirstOrDefaultAsync(n => n.NutritionId == id && n.ExpirationDate == null);
 
-            if (nutrition == null) return NotFound("Piano nutrizionale non trovato.");
+            if (nutrition == null) return this.ApiNotFound("nutrition_not_found", "Piano nutrizionale non trovato.");
 
             nutrition.TypeNutritionId = request.TypeNutritionId;
             nutrition.TotDailyCalories = request.TotDailyCalories;
@@ -224,9 +223,9 @@ namespace slowfit.Controllers
                 await _slowFitContext.SaveChangesAsync();
                 return Ok("Piano nutrizionale aggiornato con successo.");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return BadRequest($"Errore durante l'aggiornamento: {ex.Message}");
+                return this.ApiServerError("nutrition_update_failed", "Non è stato possibile aggiornare il piano nutrizionale. Riprova.");
             }
         }
 
@@ -239,7 +238,7 @@ public async Task<IActionResult> DeleteNutrition(int id)
         .Include(n => n.NutritionMeals)
         .FirstOrDefaultAsync(n => n.NutritionId == id);
 
-    if (nutrition == null) return NotFound("Piano nutrizionale non trovato.");
+    if (nutrition == null) return this.ApiNotFound("nutrition_not_found", "Piano nutrizionale non trovato.");
 
     try
     {
@@ -250,9 +249,9 @@ public async Task<IActionResult> DeleteNutrition(int id)
         await _slowFitContext.SaveChangesAsync();
         return Ok("Piano nutrizionale eliminato con successo.");
     }
-    catch (Exception ex)
+    catch (Exception)
     {
-        return BadRequest($"Errore durante l'eliminazione: {ex.Message}");
+        return this.ApiServerError("nutrition_delete_failed", "Non è stato possibile eliminare il piano nutrizionale. Riprova.");
     }
 }
 

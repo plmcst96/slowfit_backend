@@ -45,7 +45,7 @@ namespace slowfit.Controllers
             }
             catch (Exception)
             {
-                return BadRequest($"An error occurred");
+                return this.ApiServerError("meal_fetch_failed", "Non è stato possibile caricare le ricette. Riprova.");
             }
         }
 
@@ -87,9 +87,9 @@ namespace slowfit.Controllers
 
                 return Ok(mealRes);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return StatusCode(500, $"Errore del server: {ex.Message}");
+                return this.ApiServerError("meal_fetch_failed", "Non è stato possibile caricare la ricetta. Riprova.");
             }
         }
 
@@ -142,7 +142,7 @@ namespace slowfit.Controllers
             }
             catch (Exception)
             {
-                return BadRequest($"No meal found with {id}");
+                return this.ApiNotFound("meal_not_found", "Ricetta non trovata.");
             }
         }
 
@@ -175,7 +175,7 @@ namespace slowfit.Controllers
             }
             catch (Exception)
             {
-                return BadRequest($"An error occurred while fetching meals for category {categoryId}");
+                return this.ApiServerError("meal_fetch_failed", "Non è stato possibile caricare le ricette per questa categoria.");
             }
         }
 
@@ -210,9 +210,9 @@ namespace slowfit.Controllers
 
                 return Ok(meals);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return StatusCode(500, $"Errore del server: {ex.Message}");
+                return this.ApiServerError("meal_fetch_failed", "Non è stato possibile caricare le ricette per questo giorno.");
             }
         }
 
@@ -223,13 +223,13 @@ namespace slowfit.Controllers
         {
             // ✅ Controllo se il body è nullo
             if (mealWithIngredients == null)
-                return BadRequest("Il corpo della richiesta non può essere nullo.");
+                return this.ApiBadRequest("invalid_meal", "I dati della ricetta sono obbligatori.");
 
             // ✅ Controllo campi obbligatori
             if (string.IsNullOrWhiteSpace(mealWithIngredients.Name))
-                return BadRequest("Il nome del pasto è obbligatorio.");
+                return this.ApiBadRequest("missing_meal_name", "Il nome della ricetta è obbligatorio.");
             if (mealWithIngredients.Ingredients == null || mealWithIngredients.Ingredients.Count == 0)
-                return BadRequest("Devi fornire almeno un ingrediente.");
+                return this.ApiBadRequest("missing_ingredients", "Aggiungi almeno un ingrediente.");
 
             try
             {
@@ -256,10 +256,10 @@ namespace slowfit.Controllers
                 foreach (var ingredient in mealWithIngredients.Ingredients)
                 {
                     if (ingredient.IngredientId <= 0)
-                        return BadRequest($"Ingrediente non valido con ID: {ingredient.IngredientId}");
+                        return this.ApiBadRequest("invalid_ingredient", "Uno o più ingredienti selezionati non sono validi.");
 
                     if (ingredient.Quantity <= 0)
-                        return BadRequest($"La quantità dell'ingrediente ID {ingredient.IngredientId} deve essere maggiore di zero.");
+                        return this.ApiBadRequest("invalid_ingredient_quantity", "La quantità degli ingredienti deve essere maggiore di zero.");
 
                     var mealIngredient = new MealIngredient
                     {
@@ -279,15 +279,15 @@ namespace slowfit.Controllers
                     mealId = meal.MealId
                 });
             }
-            catch (DbUpdateException dbEx)
+            catch (DbUpdateException)
             {
                 // 🔥 Errori relativi al database (es. vincoli FK)
-                return StatusCode(500, $"Errore durante il salvataggio nel database: {dbEx.InnerException?.Message ?? dbEx.Message}");
+                return this.ApiServerError("meal_save_failed", "Non è stato possibile salvare la ricetta. Riprova.");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // 🔥 Gestione di qualsiasi altra eccezione
-                return StatusCode(500, $"Si è verificato un errore imprevisto: {ex.Message}");
+                return this.ApiServerError();
             }
         }
 
@@ -296,17 +296,17 @@ namespace slowfit.Controllers
         public IActionResult UpdateMealWithIngredients(int id, [FromBody] MealResWithIngredients updateMeal)
         {
             if (updateMeal == null)
-                return BadRequest("Il corpo della richiesta non può essere nullo.");
+                return this.ApiBadRequest("invalid_meal", "I dati della ricetta sono obbligatori.");
             if (string.IsNullOrWhiteSpace(updateMeal.Name))
-                return BadRequest("Il nome della ricetta è obbligatorio.");
+                return this.ApiBadRequest("missing_meal_name", "Il nome della ricetta è obbligatorio.");
             if (updateMeal.Ingredients == null || updateMeal.Ingredients.Count == 0)
-                return BadRequest("Devi fornire almeno un ingrediente.");
+                return this.ApiBadRequest("missing_ingredients", "Aggiungi almeno un ingrediente.");
 
             try
             {
                 var meal = _slowFitContext.Meals.FirstOrDefault(m => m.MealId == id);
                 if (meal == null)
-                    return NotFound($"Nessuna ricetta trovata con ID {id}.");
+                    return this.ApiNotFound("meal_not_found", "Ricetta non trovata.");
 
                 // ✅ Aggiornamento dei campi base
                 meal.Name = updateMeal.Name;
@@ -329,9 +329,9 @@ namespace slowfit.Controllers
                 foreach (var ingredient in updateMeal.Ingredients)
                 {
                     if (ingredient.IngredientId <= 0)
-                        return BadRequest($"Ingrediente non valido (ID: {ingredient.IngredientId})");
+                        return this.ApiBadRequest("invalid_ingredient", "Uno o più ingredienti selezionati non sono validi.");
                     if (ingredient.Quantity <= 0)
-                        return BadRequest($"La quantità dell'ingrediente con ID {ingredient.IngredientId} deve essere > 0.");
+                        return this.ApiBadRequest("invalid_ingredient_quantity", "La quantità degli ingredienti deve essere maggiore di zero.");
 
                     var mealIngredient = new MealIngredient
                     {
@@ -347,13 +347,13 @@ namespace slowfit.Controllers
                 _slowFitContext.SaveChanges();
                 return Ok(new { message = "Ricetta aggiornata con successo.", mealId = id });
             }
-            catch (DbUpdateException dbEx)
+            catch (DbUpdateException)
             {
-                return StatusCode(500, $"Errore durante l'aggiornamento nel database: {dbEx.InnerException?.Message ?? dbEx.Message}");
+                return this.ApiServerError("meal_update_failed", "Non è stato possibile aggiornare la ricetta. Riprova.");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return StatusCode(500, $"Errore imprevisto: {ex.Message}");
+                return this.ApiServerError();
             }
         }
 
@@ -362,13 +362,13 @@ namespace slowfit.Controllers
         public IActionResult DeleteMeal(int id)
         {
             if (id <= 0)
-                return BadRequest("ID non valido.");
+                return this.ApiBadRequest("invalid_meal", "Ricetta non valida.");
 
             try
             {
                 var meal = _slowFitContext.Meals.FirstOrDefault(m => m.MealId == id);
                 if (meal == null)
-                    return NotFound($"Nessuna ricetta trovata con ID {id}.");
+                    return this.ApiNotFound("meal_not_found", "Ricetta non trovata.");
 
                 // ✅ Eliminare ingredienti associati
                 var ingredients = _slowFitContext.MealIngredients.Where(mi => mi.MealId == id);
@@ -380,13 +380,13 @@ namespace slowfit.Controllers
 
                 return Ok(new { message = "Ricetta e relativi ingredienti eliminati con successo.", mealId = id });
             }
-            catch (DbUpdateException dbEx)
+            catch (DbUpdateException)
             {
-                return StatusCode(500, $"Errore durante l'eliminazione dal database: {dbEx.InnerException?.Message ?? dbEx.Message}");
+                return this.ApiServerError("meal_delete_failed", "Non è stato possibile eliminare la ricetta. Riprova.");
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return StatusCode(500, $"Errore imprevisto: {ex.Message}");
+                return this.ApiServerError();
             }
         }
 

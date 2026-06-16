@@ -97,7 +97,7 @@ public sealed class ResponseQuizService(SlowFitContext context) : CrudServiceBas
     {
         if (requests == null || requests.Count == 0 || requests.Any(request => !IsValid(request)))
         {
-            return ServiceResult<IReadOnlyList<ResponseQuizRes>>.BadRequest("invalid_response_quiz", "Invalid response quiz data.");
+            return ServiceResult<IReadOnlyList<ResponseQuizRes>>.BadRequest("invalid_response_quiz", "Le risposte del quiz non sono valide.");
         }
 
         var entities = requests.Select(CreateEntity).ToList();

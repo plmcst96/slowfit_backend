@@ -32,7 +32,7 @@ public sealed class RoleService(SlowFitContext slowFitContext) : IRoleService
         var exists = await _slowFitContext.RoleUsers.AnyAsync(r => r.RoleName == normalizedRoleName);
         if (exists)
         {
-            return ServiceResult<RoleDto>.Conflict("role_conflict", "Role already exists.");
+            return ServiceResult<RoleDto>.Conflict("role_conflict", "Questo ruolo esiste già.");
         }
 
         var role = new RoleUser { RoleName = normalizedRoleName };
@@ -50,14 +50,14 @@ public sealed class RoleService(SlowFitContext slowFitContext) : IRoleService
         var role = await _slowFitContext.RoleUsers.FirstOrDefaultAsync(r => r.RoleId == roleId);
         if (role == null)
         {
-            return ServiceResult<RoleDto>.NotFound("role_not_found", "Role not found.");
+            return ServiceResult<RoleDto>.NotFound("role_not_found", "Ruolo non trovato.");
         }
 
         var normalizedRoleName = request.RoleName.Trim();
         var exists = await _slowFitContext.RoleUsers.AnyAsync(r => r.RoleId != roleId && r.RoleName == normalizedRoleName);
         if (exists)
         {
-            return ServiceResult<RoleDto>.Conflict("role_conflict", "Role already exists.");
+            return ServiceResult<RoleDto>.Conflict("role_conflict", "Questo ruolo esiste già.");
         }
 
         role.RoleName = normalizedRoleName;
@@ -71,13 +71,13 @@ public sealed class RoleService(SlowFitContext slowFitContext) : IRoleService
         var role = await _slowFitContext.RoleUsers.FirstOrDefaultAsync(r => r.RoleId == roleId);
         if (role == null)
         {
-            return ServiceResult<object>.NotFound("role_not_found", "Role not found.");
+            return ServiceResult<object>.NotFound("role_not_found", "Ruolo non trovato.");
         }
 
         var roleHasUsers = await _slowFitContext.Users.AnyAsync(u => u.RoleId == roleId);
         if (roleHasUsers)
         {
-            return ServiceResult<object>.Conflict("role_in_use", "Role cannot be deleted because users are assigned to it.");
+            return ServiceResult<object>.Conflict("role_in_use", "Non puoi eliminare questo ruolo perché è assegnato ad alcuni utenti.");
         }
 
         _slowFitContext.RoleUsers.Remove(role);
@@ -90,7 +90,7 @@ public sealed class RoleService(SlowFitContext slowFitContext) : IRoleService
     {
         if (request == null || string.IsNullOrWhiteSpace(request.RoleName))
         {
-            return ServiceResult<RoleDto>.BadRequest("invalid_role", "RoleName is required.");
+            return ServiceResult<RoleDto>.BadRequest("invalid_role", "Il nome del ruolo è obbligatorio.");
         }
 
         return null;

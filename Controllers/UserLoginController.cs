@@ -25,7 +25,7 @@ public class UserLoginController(IAuthService authService) : ControllerBase
     public async Task<IActionResult> Refresh()
     {
         var userId = User.GetUserId();
-        if (userId == null) return Unauthorized();
+        if (userId == null) return this.ApiUnauthorized();
         return this.ToActionResult(await _authService.RefreshAsync(userId.Value));
     }
 
@@ -34,7 +34,7 @@ public class UserLoginController(IAuthService authService) : ControllerBase
     public async Task<IActionResult> Me()
     {
         var userId = User.GetUserId();
-        if (userId == null) return Unauthorized();
+        if (userId == null) return this.ApiUnauthorized();
         return this.ToActionResult(await _authService.GetMeAsync(userId.Value));
     }
 }

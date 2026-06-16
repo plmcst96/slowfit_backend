@@ -42,7 +42,7 @@ public sealed class IngredientService(SlowFitContext context) : CrudServiceBase<
     {
         if (string.IsNullOrWhiteSpace(name))
         {
-            return ServiceResult<IReadOnlyList<IngredientRes>>.BadRequest("invalid_search", "The name parameter cannot be empty.");
+            return ServiceResult<IReadOnlyList<IngredientRes>>.BadRequest("invalid_search", "Inserisci un nome da cercare.");
         }
 
         var normalizedName = name.Trim().ToLower();

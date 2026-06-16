@@ -54,7 +54,7 @@ public sealed class ProgressTrainingService(SlowFitContext context) : IProgressT
     {
         if (!IsValid(request))
         {
-            return ServiceResult<ProgressTrainingSaveResponse>.BadRequest("invalid_progress_training", "Invalid progress training data.");
+            return ServiceResult<ProgressTrainingSaveResponse>.BadRequest("invalid_progress_training", "I dati del progresso allenamento non sono validi.");
         }
 
         var entity = new ProgressTraining
@@ -78,13 +78,13 @@ public sealed class ProgressTrainingService(SlowFitContext context) : IProgressT
     {
         if (!IsValid(request) || request.Id != id)
         {
-            return ServiceResult<ProgressTrainingRes>.BadRequest("invalid_progress_training", "Invalid data or ID does not match.");
+            return ServiceResult<ProgressTrainingRes>.BadRequest("invalid_progress_training", "I dati del progresso allenamento non sono validi.");
         }
 
         var entity = await _context.ProgressTrainings.FirstOrDefaultAsync(p => p.Id == id);
         if (entity == null)
         {
-            return ServiceResult<ProgressTrainingRes>.NotFound("progress_training_not_found", "Progress training not found.");
+            return ServiceResult<ProgressTrainingRes>.NotFound("progress_training_not_found", "Progresso allenamento non trovato.");
         }
 
         entity.TrainingId = request.TrainingId;
@@ -104,7 +104,7 @@ public sealed class ProgressTrainingService(SlowFitContext context) : IProgressT
         var entity = await _context.ProgressTrainings.FirstOrDefaultAsync(p => p.Id == id);
         if (entity == null)
         {
-            return ServiceResult<object>.NotFound("progress_training_not_found", "Progress training not found.");
+            return ServiceResult<object>.NotFound("progress_training_not_found", "Progresso allenamento non trovato.");
         }
 
         _context.ProgressTrainings.Remove(entity);
@@ -171,7 +171,7 @@ public sealed class ProgressNutritionService(SlowFitContext context) : IProgress
     {
         if (!IsValid(request))
         {
-            return ServiceResult<ProgressNutritionSaveResponse>.BadRequest("invalid_progress_nutrition", "Invalid progress nutrition data.");
+            return ServiceResult<ProgressNutritionSaveResponse>.BadRequest("invalid_progress_nutrition", "I dati del progresso nutrizione non sono validi.");
         }
 
         var entity = new ProgressNutrition
@@ -194,13 +194,13 @@ public sealed class ProgressNutritionService(SlowFitContext context) : IProgress
     {
         if (!IsValid(request) || request.Id != id)
         {
-            return ServiceResult<ProgressNutritionRes>.BadRequest("invalid_progress_nutrition", "Invalid data or ID does not match.");
+            return ServiceResult<ProgressNutritionRes>.BadRequest("invalid_progress_nutrition", "I dati del progresso nutrizione non sono validi.");
         }
 
         var entity = await _context.ProgressNutritions.FirstOrDefaultAsync(p => p.Id == id);
         if (entity == null)
         {
-            return ServiceResult<ProgressNutritionRes>.NotFound("progress_nutrition_not_found", "Progress nutrition not found.");
+            return ServiceResult<ProgressNutritionRes>.NotFound("progress_nutrition_not_found", "Progresso nutrizione non trovato.");
         }
 
         entity.NutritionId = request.NutritionId;
@@ -219,7 +219,7 @@ public sealed class ProgressNutritionService(SlowFitContext context) : IProgress
         var entity = await _context.ProgressNutritions.FirstOrDefaultAsync(p => p.Id == id);
         if (entity == null)
         {
-            return ServiceResult<object>.NotFound("progress_nutrition_not_found", "Progress nutrition not found.");
+            return ServiceResult<object>.NotFound("progress_nutrition_not_found", "Progresso nutrizione non trovato.");
         }
 
         _context.ProgressNutritions.Remove(entity);

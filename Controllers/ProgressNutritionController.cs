@@ -43,7 +43,7 @@ public class ProgressNutritionController(IProgressNutritionService progressNutri
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] ProgressNutritionRes request)
     {
-        if (request == null) return BadRequest();
+        if (request == null) return this.ApiBadRequest("invalid_progress_nutrition", "I dati del progresso nutrizione sono obbligatori.");
         if (!User.CanAccessUser(request.UserId)) return Forbid();
         return this.ToActionResult(await _progressNutritionService.CreateAsync(request));
     }
@@ -51,7 +51,7 @@ public class ProgressNutritionController(IProgressNutritionService progressNutri
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, [FromBody] ProgressNutritionRes request)
     {
-        if (request == null) return BadRequest();
+        if (request == null) return this.ApiBadRequest("invalid_progress_nutrition", "I dati del progresso nutrizione sono obbligatori.");
         if (!User.CanAccessUser(request.UserId)) return Forbid();
         return this.ToActionResult(await _progressNutritionService.UpdateAsync(id, request));
     }

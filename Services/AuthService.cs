@@ -20,13 +20,13 @@ public sealed class AuthService(SlowFitContext slowFitContext, IConfiguration co
     {
         if (request == null || string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
         {
-            return ServiceResult<UserLoginResponse>.BadRequest("invalid_login", "Email and password are required.");
+            return ServiceResult<UserLoginResponse>.BadRequest("invalid_login", "Inserisci email e password.");
         }
 
         var user = await _slowFitContext.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
         if (user == null || !await IsValidPasswordAsync(user, request.Password))
         {
-            return ServiceResult<UserLoginResponse>.Unauthorized("invalid_credentials", "Invalid email or password.");
+            return ServiceResult<UserLoginResponse>.Unauthorized("invalid_credentials", "Email o password non corretti.");
         }
 
         return ServiceResult<UserLoginResponse>.Ok(new UserLoginResponse
@@ -44,7 +44,7 @@ public sealed class AuthService(SlowFitContext slowFitContext, IConfiguration co
         var user = await _slowFitContext.Users.FirstOrDefaultAsync(u => u.UserId == userId);
         if (user == null)
         {
-            return ServiceResult<UserLoginResponse>.Unauthorized("invalid_token", "User not found.");
+            return ServiceResult<UserLoginResponse>.Unauthorized("invalid_token", "Utente non trovato. Effettua di nuovo il login.");
         }
 
         return ServiceResult<UserLoginResponse>.Ok(new UserLoginResponse
@@ -82,7 +82,7 @@ public sealed class AuthService(SlowFitContext slowFitContext, IConfiguration co
             .FirstOrDefaultAsync();
 
         return user == null
-            ? ServiceResult<UserMeResponse>.Unauthorized("invalid_token", "User not found.")
+            ? ServiceResult<UserMeResponse>.Unauthorized("invalid_token", "Utente non trovato. Effettua di nuovo il login.")
             : ServiceResult<UserMeResponse>.Ok(user);
     }
 

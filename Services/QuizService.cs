@@ -35,7 +35,7 @@ public sealed class QuizService(SlowFitContext context) : IQuizService
 
     public async Task<ServiceResult<QuizUserRes>> CreateAsync(QuizUserRes request)
     {
-        if (!IsValid(request)) return ServiceResult<QuizUserRes>.BadRequest("invalid_quiz", "Invalid quiz data.");
+        if (!IsValid(request)) return ServiceResult<QuizUserRes>.BadRequest("invalid_quiz", "I dati del quiz non sono validi.");
 
         var quiz = new Quiz { QuestionId = request.QuestionId, InputTypeId = request.InputTypeId, Input = request.Input, SingleResponse = request.SingleResponse, Type = request.Type };
         _context.Quizzes.Add(quiz);
@@ -47,10 +47,10 @@ public sealed class QuizService(SlowFitContext context) : IQuizService
 
     public async Task<ServiceResult<QuizUserRes>> UpdateAsync(int id, QuizUserRes request)
     {
-        if (!IsValid(request)) return ServiceResult<QuizUserRes>.BadRequest("invalid_quiz", "Invalid quiz data.");
+        if (!IsValid(request)) return ServiceResult<QuizUserRes>.BadRequest("invalid_quiz", "I dati del quiz non sono validi.");
 
         var quiz = await _context.Quizzes.FirstOrDefaultAsync(q => q.QuizId == id);
-        if (quiz == null) return ServiceResult<QuizUserRes>.NotFound("quiz_not_found", "Quiz not found.");
+        if (quiz == null) return ServiceResult<QuizUserRes>.NotFound("quiz_not_found", "Quiz non trovato.");
 
         quiz.QuestionId = request.QuestionId;
         quiz.InputTypeId = request.InputTypeId;
@@ -66,7 +66,7 @@ public sealed class QuizService(SlowFitContext context) : IQuizService
     public async Task<ServiceResult<object>> DeleteAsync(int id)
     {
         var quiz = await _context.Quizzes.FirstOrDefaultAsync(q => q.QuizId == id);
-        if (quiz == null) return ServiceResult<object>.NotFound("quiz_not_found", "Quiz not found.");
+        if (quiz == null) return ServiceResult<object>.NotFound("quiz_not_found", "Quiz non trovato.");
 
         _context.Quizzes.Remove(quiz);
         await _context.SaveChangesAsync();
