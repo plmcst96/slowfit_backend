@@ -177,6 +177,7 @@ namespace slowfit
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IUserRegistrationService, UserRegistrationService>();
             builder.Services.AddScoped<IIngredientService, IngredientService>();
+            builder.Services.AddScoped<IMealService, MealService>();
             builder.Services.AddScoped<IExerciseService, ExerciseService>();
             builder.Services.AddScoped<ICrudService<QuestionRes>, QuestionService>();
             builder.Services.AddScoped<IAnswerService, AnswerService>();
@@ -192,6 +193,8 @@ namespace slowfit
             builder.Services.AddScoped<INotificationService, NotificationService>();
             builder.Services.AddScoped<IProgressTrainingService, ProgressTrainingService>();
             builder.Services.AddScoped<IProgressNutritionService, ProgressNutritionService>();
+            builder.Services.AddScoped<INutritionService, NutritionService>();
+            builder.Services.AddScoped<ITrainingService, TrainingService>();
 
             var app = builder.Build();
 

@@ -33,6 +33,9 @@ public static class ControllerResultExtensions
     public static ObjectResult ApiUnauthorized(this ControllerBase controller, string code = "unauthorized", string message = "Sessione scaduta o non valida. Effettua di nuovo il login.") =>
         controller.ApiError(HttpStatusCode.Unauthorized, code, message);
 
+    public static ObjectResult ApiForbidden(this ControllerBase controller, string code = "forbidden", string message = "Non hai i permessi per eseguire questa operazione.") =>
+        controller.ApiError(HttpStatusCode.Forbidden, code, message);
+
     public static ObjectResult ApiServerError(this ControllerBase controller, string code = "server_error", string message = "Si è verificato un errore del server. Riprova tra poco.") =>
         controller.ApiError(HttpStatusCode.InternalServerError, code, message);
 

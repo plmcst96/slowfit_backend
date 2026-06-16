@@ -4,7 +4,7 @@ using slowfit.Services;
 
 namespace slowfit.Controllers;
 
-[Route("slowfit/ingredient")]
+[Route("slowFit/ingredient")]
 [ApiController]
 public class IngredientController(IIngredientService ingredientService) : ControllerBase
 {

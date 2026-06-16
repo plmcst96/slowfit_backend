@@ -14,7 +14,7 @@ public class ProgressNutritionController(IProgressNutritionService progressNutri
     [HttpGet]
     public async Task<IActionResult> Get()
     {
-        if (!User.IsPersonalTrainer()) return Forbid();
+        if (!User.IsPersonalTrainer()) return this.ApiForbidden();
         return this.ToActionResult(await _progressNutritionService.GetAllAsync());
     }
 
@@ -22,21 +22,21 @@ public class ProgressNutritionController(IProgressNutritionService progressNutri
     public async Task<IActionResult> GetById(int id)
     {
         var result = await _progressNutritionService.GetByIdAsync(id);
-        if (result.IsSuccess && result.Value != null && !User.CanAccessUser(result.Value.UserId)) return Forbid();
+        if (result.IsSuccess && result.Value != null && !User.CanAccessUser(result.Value.UserId)) return this.ApiForbidden();
         return this.ToActionResult(result);
     }
 
     [HttpGet("byUser/{userId}")]
     public async Task<IActionResult> GetByUser(int userId)
     {
-        if (!User.CanAccessUser(userId)) return Forbid();
+        if (!User.CanAccessUser(userId)) return this.ApiForbidden();
         return this.ToActionResult(await _progressNutritionService.GetByUserAsync(userId));
     }
 
     [HttpGet("byNutrition/{nutritionId}")]
     public async Task<IActionResult> GetByNutrition(int nutritionId)
     {
-        if (!User.IsPersonalTrainer()) return Forbid();
+        if (!User.IsPersonalTrainer()) return this.ApiForbidden();
         return this.ToActionResult(await _progressNutritionService.GetByNutritionAsync(nutritionId));
     }
 
@@ -44,7 +44,7 @@ public class ProgressNutritionController(IProgressNutritionService progressNutri
     public async Task<IActionResult> Create([FromBody] ProgressNutritionRes request)
     {
         if (request == null) return this.ApiBadRequest("invalid_progress_nutrition", "I dati del progresso nutrizione sono obbligatori.");
-        if (!User.CanAccessUser(request.UserId)) return Forbid();
+        if (!User.CanAccessUser(request.UserId)) return this.ApiForbidden();
         return this.ToActionResult(await _progressNutritionService.CreateAsync(request));
     }
 
@@ -52,7 +52,7 @@ public class ProgressNutritionController(IProgressNutritionService progressNutri
     public async Task<IActionResult> Update(int id, [FromBody] ProgressNutritionRes request)
     {
         if (request == null) return this.ApiBadRequest("invalid_progress_nutrition", "I dati del progresso nutrizione sono obbligatori.");
-        if (!User.CanAccessUser(request.UserId)) return Forbid();
+        if (!User.CanAccessUser(request.UserId)) return this.ApiForbidden();
         return this.ToActionResult(await _progressNutritionService.UpdateAsync(id, request));
     }
 
@@ -60,7 +60,7 @@ public class ProgressNutritionController(IProgressNutritionService progressNutri
     public async Task<IActionResult> Delete(int id)
     {
         var result = await _progressNutritionService.GetByIdAsync(id);
-        if (result.IsSuccess && result.Value != null && !User.CanAccessUser(result.Value.UserId)) return Forbid();
+        if (result.IsSuccess && result.Value != null && !User.CanAccessUser(result.Value.UserId)) return this.ApiForbidden();
         return this.ToActionResult(await _progressNutritionService.DeleteAsync(id));
     }
 }

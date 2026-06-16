@@ -32,6 +32,8 @@ public sealed class ServiceResult<T>
 
     public static ServiceResult<T> Unauthorized(string code, string message) => new(HttpStatusCode.Unauthorized, errorCode: code, errorMessage: message);
 
+    public static ServiceResult<T> Forbidden(string code, string message) => new(HttpStatusCode.Forbidden, errorCode: code, errorMessage: message);
+
     public static ServiceResult<T> NotFound(string code, string message) => new(HttpStatusCode.NotFound, errorCode: code, errorMessage: message);
 
     public static ServiceResult<T> Conflict(string code, string message) => new(HttpStatusCode.Conflict, errorCode: code, errorMessage: message);

@@ -23,7 +23,7 @@ namespace slowfit.Controllers
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] RoleUpsertRequest roleUser)
         {
-            if (!User.IsSuperAdmin()) return Forbid();
+            if (!User.IsSuperAdmin()) return this.ApiForbidden();
 
             var result = await _roleService.CreateAsync(roleUser);
             return this.ToActionResult(result);
@@ -33,7 +33,7 @@ namespace slowfit.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Put(int id, [FromBody] RoleUpsertRequest roleUser)
         {
-            if (!User.IsSuperAdmin()) return Forbid();
+            if (!User.IsSuperAdmin()) return this.ApiForbidden();
 
             var result = await _roleService.UpdateAsync(id, roleUser);
             return this.ToActionResult(result);
@@ -43,7 +43,7 @@ namespace slowfit.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            if (!User.IsSuperAdmin()) return Forbid();
+            if (!User.IsSuperAdmin()) return this.ApiForbidden();
 
             var result = await _roleService.DeleteAsync(id);
             return this.ToActionResult(result);

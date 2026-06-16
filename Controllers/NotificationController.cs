@@ -15,7 +15,7 @@ public class NotificationController(INotificationService notificationService) : 
     public async Task<IActionResult> NotifyTrainerByClient([FromBody] ClientToTrainerNotificationRequest request)
     {
         if (request == null) return this.ApiBadRequest("invalid_notification", "I dati della notifica sono obbligatori.");
-        if (!User.CanAccessUser(request.ClientId)) return Forbid();
+        if (!User.CanAccessUser(request.ClientId)) return this.ApiForbidden();
         return this.ToActionResult(await _notificationService.NotifyTrainerByClientAsync(request));
     }
 
@@ -23,14 +23,14 @@ public class NotificationController(INotificationService notificationService) : 
     public async Task<IActionResult> NotifyClientByTrainer([FromBody] TrainerToClientNotificationRequest request)
     {
         if (request == null) return this.ApiBadRequest("invalid_notification", "I dati della notifica sono obbligatori.");
-        if (!User.IsPersonalTrainer()) return Forbid();
+        if (!User.IsPersonalTrainer()) return this.ApiForbidden();
         return this.ToActionResult(await _notificationService.NotifyClientByTrainerAsync(request));
     }
 
     [HttpGet("{userId}")]
     public async Task<IActionResult> GetByUser(int userId)
     {
-        if (!User.CanAccessUser(userId)) return Forbid();
+        if (!User.CanAccessUser(userId)) return this.ApiForbidden();
         return this.ToActionResult(await _notificationService.GetByUserAsync(userId));
     }
 
