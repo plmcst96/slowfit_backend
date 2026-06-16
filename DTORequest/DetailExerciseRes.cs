@@ -14,6 +14,8 @@ namespace slowfit.DTORequest
 
         public int? Series { get; set; }
 
+        public decimal? Kg { get; set; }
+
         public int ExerciseId { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]

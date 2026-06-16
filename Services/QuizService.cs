@@ -24,13 +24,13 @@ public sealed class QuizService(SlowFitContext context) : IQuizService
         if (!string.IsNullOrWhiteSpace(type)) query = query.Where(q => q.Type == type);
 
         var quizzes = await ProjectToResponse(query.OrderBy(q => q.Input).ThenBy(q => q.QuizId)).ToListAsync();
-        return quizzes.Count == 0 ? ServiceResult<IReadOnlyList<QuizUserResponse>>.NoContent() : ServiceResult<IReadOnlyList<QuizUserResponse>>.Ok(quizzes);
+        return ServiceResult<IReadOnlyList<QuizUserResponse>>.Ok(quizzes);
     }
 
     public async Task<ServiceResult<QuizUserResponse>> GetByIdAsync(int id)
     {
         var quiz = await ProjectToResponse(_context.Quizzes.AsNoTracking().Where(q => q.QuizId == id)).FirstOrDefaultAsync();
-        return quiz == null ? ServiceResult<QuizUserResponse>.NotFound("quiz_not_found", "Quiz not found.") : ServiceResult<QuizUserResponse>.Ok(quiz);
+        return quiz == null ? ServiceResult<QuizUserResponse>.Ok(default!) : ServiceResult<QuizUserResponse>.Ok(quiz);
     }
 
     public async Task<ServiceResult<QuizUserRes>> CreateAsync(QuizUserRes request)

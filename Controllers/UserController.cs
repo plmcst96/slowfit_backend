@@ -8,9 +8,10 @@ namespace slowfit.Controllers;
 
 [Route("slowFit/user")]
 [ApiController]
-public class UserController(IUserService userService) : ControllerBase
+public class UserController(IUserService userService, INotificationService notificationService) : ControllerBase
 {
     private readonly IUserService _userService = userService;
+    private readonly INotificationService _notificationService = notificationService;
 
     [HttpGet]
     public async Task<IActionResult> GetUsersByRole([FromQuery] int roleId)
@@ -53,6 +54,14 @@ public class UserController(IUserService userService) : ControllerBase
     {
         if (!User.CanAccessUser(userId)) return Forbid();
         return this.ToActionResult(await _userService.CreateProfileAsync(userId, request));
+    }
+
+    [HttpPost("update-fcm-token")]
+    public async Task<IActionResult> UpdateFcmToken([FromBody] UpdateFcmTokenRequest request)
+    {
+        if (request == null) return BadRequest();
+        if (!User.CanAccessUser(request.UserId)) return Forbid();
+        return this.ToActionResult(await _notificationService.UpdateFcmTokenAsync(request));
     }
 
     [HttpPut("profile/{id}")]

@@ -60,7 +60,7 @@ namespace slowfit.Controllers
                     .FirstOrDefault(m => m.MealId == id);
 
                 if (meal == null)
-                    return NotFound($"Nessun pasto trovato con ID: {id}");
+                    return Ok(new { });
 
                 var mealRes = new MealRes
                 {
@@ -126,9 +126,6 @@ namespace slowfit.Controllers
                 })
                 .ToList();
 
-            if (meals.Count == 0)
-                return NotFound($"No meals found containing ingredient {ingredientId}");
-
             return Ok(meals);
         }
 
@@ -140,7 +137,7 @@ namespace slowfit.Controllers
             try
             {
                 var meal = _slowFitContext.Meals.Where(t => t.MealId == id).FirstOrDefault();
-                if (meal == null) return NotFound();
+                if (meal == null) return Ok(new { });
                 return Ok(meal);
             }
             catch (Exception)
@@ -173,9 +170,6 @@ namespace slowfit.Controllers
                         CategoryId = m.CategoryId
                     })
                     .ToList();
-
-                if (meals.Count == 0)
-                    return NotFound($"No meals found for category {categoryId}");
 
                 return Ok(meals);
             }
@@ -213,9 +207,6 @@ namespace slowfit.Controllers
                     })
                     .Distinct() // Evita duplicati se più NutritionMeals puntano allo stesso pasto
                     .ToList();
-
-                if (meals.Count == 0)
-                    return NotFound($"Nessun pasto trovato per il giorno con ID {dayId}");
 
                 return Ok(meals);
             }

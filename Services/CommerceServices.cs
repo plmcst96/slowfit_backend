@@ -48,10 +48,9 @@ public sealed class OrderService(SlowFitContext context) : CrudServiceBase<Order
 
     public async Task<ServiceResult<IReadOnlyList<OrderRes>>> GetByUserAsync(int userId)
     {
-        var orders = await Set.AsNoTracking().Where(o => o.UserId == userId).Select(o => ToDto(o)).ToListAsync();
-        return orders.Count == 0
-            ? ServiceResult<IReadOnlyList<OrderRes>>.NotFound("order_not_found", "No orders found for the user.")
-            : ServiceResult<IReadOnlyList<OrderRes>>.Ok(orders);
+        var entities = await Set.AsNoTracking().Where(o => o.UserId == userId).ToListAsync();
+        var orders = entities.Select(ToDto).ToList();
+        return ServiceResult<IReadOnlyList<OrderRes>>.Ok(orders);
     }
 }
 
@@ -81,9 +80,8 @@ public sealed class BillingService(SlowFitContext context) : CrudServiceBase<Bil
 
     public async Task<ServiceResult<IReadOnlyList<BillingRes>>> GetByUserAsync(int userId)
     {
-        var billings = await Set.AsNoTracking().Where(b => b.UserId == userId).Select(b => ToDto(b)).ToListAsync();
-        return billings.Count == 0
-            ? ServiceResult<IReadOnlyList<BillingRes>>.NotFound("billing_not_found", "No billing records found for the user.")
-            : ServiceResult<IReadOnlyList<BillingRes>>.Ok(billings);
+        var entities = await Set.AsNoTracking().Where(b => b.UserId == userId).ToListAsync();
+        var billings = entities.Select(ToDto).ToList();
+        return ServiceResult<IReadOnlyList<BillingRes>>.Ok(billings);
     }
 }

@@ -40,20 +40,19 @@ public sealed class AnswerService(SlowFitContext context) : CrudServiceBase<Answ
 
     public async Task<ServiceResult<IReadOnlyList<AnswerRes>>> GetByQuestionAsync(int questionId)
     {
-        var answers = await Set.AsNoTracking()
+        var entities = await Set.AsNoTracking()
             .Where(a => a.QuestionId == questionId)
-            .Select(a => ToDto(a))
             .ToListAsync();
+        var answers = entities.Select(ToDto).ToList();
 
-        return answers.Count == 0
-            ? ServiceResult<IReadOnlyList<AnswerRes>>.NotFound("answer_not_found", "No answers found for the question.")
-            : ServiceResult<IReadOnlyList<AnswerRes>>.Ok(answers);
+        return ServiceResult<IReadOnlyList<AnswerRes>>.Ok(answers);
     }
 }
 
 public interface IResponseQuizService : ICrudService<ResponseQuizRes>
 {
     Task<ServiceResult<IReadOnlyList<ResponseQuizRes>>> GetByUserAsync(int userId);
+    Task<ServiceResult<IReadOnlyList<ResponseQuizRes>>> CreateManyAsync(IReadOnlyList<ResponseQuizRes> requests);
 }
 
 public sealed class ResponseQuizService(SlowFitContext context) : CrudServiceBase<ResponseQuiz, ResponseQuizRes>(context), IResponseQuizService
@@ -86,13 +85,25 @@ public sealed class ResponseQuizService(SlowFitContext context) : CrudServiceBas
 
     public async Task<ServiceResult<IReadOnlyList<ResponseQuizRes>>> GetByUserAsync(int userId)
     {
-        var responses = await Set.AsNoTracking()
+        var entities = await Set.AsNoTracking()
             .Where(r => r.UserId == userId)
-            .Select(r => ToDto(r))
             .ToListAsync();
+        var responses = entities.Select(ToDto).ToList();
 
-        return responses.Count == 0
-            ? ServiceResult<IReadOnlyList<ResponseQuizRes>>.NotFound("response_quiz_not_found", "No quiz responses found for the user.")
-            : ServiceResult<IReadOnlyList<ResponseQuizRes>>.Ok(responses);
+        return ServiceResult<IReadOnlyList<ResponseQuizRes>>.Ok(responses);
+    }
+
+    public async Task<ServiceResult<IReadOnlyList<ResponseQuizRes>>> CreateManyAsync(IReadOnlyList<ResponseQuizRes> requests)
+    {
+        if (requests == null || requests.Count == 0 || requests.Any(request => !IsValid(request)))
+        {
+            return ServiceResult<IReadOnlyList<ResponseQuizRes>>.BadRequest("invalid_response_quiz", "Invalid response quiz data.");
+        }
+
+        var entities = requests.Select(CreateEntity).ToList();
+        Set.AddRange(entities);
+        await DbContext.SaveChangesAsync();
+
+        return ServiceResult<IReadOnlyList<ResponseQuizRes>>.Created(entities.Select(ToDto).ToList());
     }
 }

@@ -16,5 +16,7 @@ namespace slowfit.DTOResponse
 
         public int? Series { get; set; }
 
+        public decimal? Kg { get; set; }
+
     }
 }

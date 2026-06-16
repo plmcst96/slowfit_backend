@@ -20,9 +20,7 @@ public sealed class RoleService(SlowFitContext slowFitContext) : IRoleService
             })
             .ToListAsync();
 
-        return roles.Count == 0
-            ? ServiceResult<IReadOnlyList<RoleDto>>.NoContent()
-            : ServiceResult<IReadOnlyList<RoleDto>>.Ok(roles);
+        return ServiceResult<IReadOnlyList<RoleDto>>.Ok(roles);
     }
 
     public async Task<ServiceResult<RoleDto>> CreateAsync(RoleUpsertRequest request)

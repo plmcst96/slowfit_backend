@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using slowfit.DTORequest;
 using slowfit.Services;
+using System.Text.Json;
 
 namespace slowfit.Controllers;
 
@@ -9,6 +10,7 @@ namespace slowfit.Controllers;
 public class ResponseQuizController(IResponseQuizService responseQuizService) : ControllerBase
 {
     private readonly IResponseQuizService _responseQuizService = responseQuizService;
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
     [HttpGet]
     public async Task<IActionResult> GetAll() => this.ToActionResult(await _responseQuizService.GetAllAsync());
@@ -20,7 +22,24 @@ public class ResponseQuizController(IResponseQuizService responseQuizService) : 
     public async Task<IActionResult> GetResponseQuizByUserId(int userId) => this.ToActionResult(await _responseQuizService.GetByUserAsync(userId));
 
     [HttpPost]
-    public async Task<IActionResult> Post([FromBody] ResponseQuizRes request) => this.ToActionResult(await _responseQuizService.CreateAsync(request));
+    public async Task<IActionResult> Post([FromBody] JsonElement request)
+    {
+        try
+        {
+            if (request.ValueKind == JsonValueKind.Array)
+            {
+                var responses = request.Deserialize<List<ResponseQuizRes>>(JsonOptions) ?? [];
+                return this.ToActionResult(await _responseQuizService.CreateManyAsync(responses));
+            }
+
+            var response = request.Deserialize<ResponseQuizRes>(JsonOptions);
+            return this.ToActionResult(await _responseQuizService.CreateAsync(response!));
+        }
+        catch (JsonException)
+        {
+            return BadRequest(new { code = "invalid_response_quiz", message = "Invalid response quiz payload." });
+        }
+    }
 
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateResponse(int id, [FromBody] ResponseQuizRes request) => this.ToActionResult(await _responseQuizService.UpdateAsync(id, request));

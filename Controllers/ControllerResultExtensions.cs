@@ -15,7 +15,8 @@ public static class ControllerResultExtensions
 
         if (result.IsSuccess)
         {
-            return controller.StatusCode((int)result.StatusCode, result.Value);
+            // GET di un singolo oggetto non trovato -> 200 con {} invece di un errore.
+            return controller.StatusCode((int)result.StatusCode, result.Value ?? (object)new { });
         }
 
         return controller.StatusCode((int)result.StatusCode, new ApiErrorResponse

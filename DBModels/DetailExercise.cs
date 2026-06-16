@@ -19,6 +19,8 @@ public partial class DetailExercise
 
     public int? Series { get; set; }
 
+    public decimal? Kg { get; set; }
+
     public virtual Exercise Exercise { get; set; } = null!;
 
     public virtual Training Training { get; set; } = null!;

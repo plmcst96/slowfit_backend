@@ -29,16 +29,14 @@ public abstract class CrudServiceBase<TEntity, TDto>(DbContext dbContext) : ICru
         var items = await Set.AsNoTracking().ToListAsync();
         var dtoList = items.Select(ToDto).ToList();
 
-        return dtoList.Count == 0
-            ? ServiceResult<IReadOnlyList<TDto>>.NoContent()
-            : ServiceResult<IReadOnlyList<TDto>>.Ok(dtoList);
+        return ServiceResult<IReadOnlyList<TDto>>.Ok(dtoList);
     }
 
     public async Task<ServiceResult<TDto>> GetByIdAsync(int id)
     {
         var entity = await FindByIdAsync(id);
         return entity == null
-            ? ServiceResult<TDto>.NotFound($"{EntityCode}_not_found", $"{EntityName} not found.")
+            ? ServiceResult<TDto>.Ok(default!)
             : ServiceResult<TDto>.Ok(ToDto(entity));
     }
 

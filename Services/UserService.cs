@@ -11,9 +11,6 @@ public sealed class UserService(SlowFitContext slowFitContext) : IUserService
 
     public async Task<ServiceResult<IReadOnlyList<UserRes>>> GetUsersByRoleAsync(int roleId)
     {
-        var roleExists = await _slowFitContext.RoleUsers.AnyAsync(r => r.RoleId == roleId);
-        if (!roleExists) return ServiceResult<IReadOnlyList<UserRes>>.NotFound("role_not_found", "Role not found.");
-
         var users = await _slowFitContext.Users.Where(u => u.RoleId == roleId).Select(u => ToUserRes(u)).ToListAsync();
         return ServiceResult<IReadOnlyList<UserRes>>.Ok(users);
     }
@@ -21,25 +18,25 @@ public sealed class UserService(SlowFitContext slowFitContext) : IUserService
     public async Task<ServiceResult<IReadOnlyList<UserRes>>> GetUsersByPtIdAsync(int ptId)
     {
         var users = await _slowFitContext.Users.Where(u => u.PtId == ptId).Select(u => ToUserRes(u)).ToListAsync();
-        return users.Count == 0 ? ServiceResult<IReadOnlyList<UserRes>>.NotFound("users_not_found", "No users found for the given PT.") : ServiceResult<IReadOnlyList<UserRes>>.Ok(users);
+        return ServiceResult<IReadOnlyList<UserRes>>.Ok(users);
     }
 
     public async Task<ServiceResult<IReadOnlyList<UserProfile>>> GetAllUsersAsync()
     {
         var users = await _slowFitContext.Users.Select(u => ToUserProfile(u)).ToListAsync();
-        return users.Count == 0 ? ServiceResult<IReadOnlyList<UserProfile>>.NoContent() : ServiceResult<IReadOnlyList<UserProfile>>.Ok(users);
+        return ServiceResult<IReadOnlyList<UserProfile>>.Ok(users);
     }
 
     public async Task<ServiceResult<UserRes>> GetProfileAsync(int userId)
     {
         var user = await _slowFitContext.Users.FirstOrDefaultAsync(u => u.UserId == userId);
-        return user == null ? ServiceResult<UserRes>.NotFound("user_not_found", "Profile not found.") : ServiceResult<UserRes>.Ok(ToUserRes(user));
+        return user == null ? ServiceResult<UserRes>.Ok(default!) : ServiceResult<UserRes>.Ok(ToUserRes(user));
     }
 
     public async Task<ServiceResult<UserProfile>> GetProfileByEmailAsync(string email)
     {
         var user = await _slowFitContext.Users.FirstOrDefaultAsync(u => u.Email == email);
-        return user == null ? ServiceResult<UserProfile>.NotFound("user_not_found", "Profile not found.") : ServiceResult<UserProfile>.Ok(ToUserProfile(user));
+        return user == null ? ServiceResult<UserProfile>.Ok(default!) : ServiceResult<UserProfile>.Ok(ToUserProfile(user));
     }
 
     public async Task<ServiceResult<object>> CreateProfileAsync(int userId, AddProfile request)
@@ -95,8 +92,60 @@ public sealed class UserService(SlowFitContext slowFitContext) : IUserService
         var user = await _slowFitContext.Users.FirstOrDefaultAsync(u => u.UserId == userId);
         if (user == null) return ServiceResult<object>.NotFound("user_not_found", "User not found.");
 
+        await using var transaction = await _slowFitContext.Database.BeginTransactionAsync();
+
+        var nutritionIds = await _slowFitContext.Nutritions
+            .Where(n => n.UserId == userId)
+            .Select(n => n.NutritionId)
+            .ToListAsync();
+
+        var trainingIds = await _slowFitContext.Training
+            .Where(t => t.UserId == userId)
+            .Select(t => t.TrainingId)
+            .ToListAsync();
+
+        var orderIds = await _slowFitContext.Orders
+            .Where(o => o.UserId == userId)
+            .Select(o => o.OrderId)
+            .ToListAsync();
+
+        await _slowFitContext.NotificationsFires.Where(n => n.ReceiverId == userId).ExecuteDeleteAsync();
+        await _slowFitContext.Appointments.Where(a => a.UserId == userId || a.PtId == userId).ExecuteDeleteAsync();
+        await _slowFitContext.Measures.Where(m => m.UserId == userId).ExecuteDeleteAsync();
+        await _slowFitContext.ResponseQuizzes.Where(r => r.UserId == userId).ExecuteDeleteAsync();
+        await _slowFitContext.ProgressTrainings.Where(p => p.UserId == userId || trainingIds.Contains(p.TrainingId)).ExecuteDeleteAsync();
+        await _slowFitContext.ProgressNutritions.Where(p => p.UserId == userId || nutritionIds.Contains(p.NutritionId)).ExecuteDeleteAsync();
+
+        if (trainingIds.Count > 0)
+        {
+            await _slowFitContext.DetailExercises.Where(d => trainingIds.Contains(d.TrainingId)).ExecuteDeleteAsync();
+        }
+
+        await _slowFitContext.Training.Where(t => t.UserId == userId).ExecuteDeleteAsync();
+
+        if (nutritionIds.Count > 0)
+        {
+            await _slowFitContext.NutritionMeals.Where(nm => nutritionIds.Contains(nm.NutritionId)).ExecuteDeleteAsync();
+        }
+
+        await _slowFitContext.Nutritions.Where(n => n.UserId == userId).ExecuteDeleteAsync();
+
+        if (orderIds.Count > 0)
+        {
+            await _slowFitContext.Billings.Where(b => orderIds.Contains(b.OrderId)).ExecuteDeleteAsync();
+        }
+
+        await _slowFitContext.Billings.Where(b => b.UserId == userId).ExecuteDeleteAsync();
+        await _slowFitContext.Orders.Where(o => o.UserId == userId).ExecuteDeleteAsync();
+
+        await _slowFitContext.Users
+            .Where(u => u.PtId == userId)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(u => u.PtId, (int?)null));
+
         _slowFitContext.Users.Remove(user);
         await _slowFitContext.SaveChangesAsync();
+        await transaction.CommitAsync();
+
         return ServiceResult<object>.NoContent();
     }
 

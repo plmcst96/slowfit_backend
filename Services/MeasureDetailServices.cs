@@ -30,14 +30,16 @@ public sealed class MeasureService(SlowFitContext context) : CrudServiceBase<Mea
 
     public async Task<ServiceResult<IReadOnlyList<MeasureRes>>> GetByDateAsync(DateTime date)
     {
-        var measures = await Set.AsNoTracking().Where(m => m.CollectPeriod == date.Date).Select(m => ToDto(m)).ToListAsync();
-        return measures.Count == 0 ? ServiceResult<IReadOnlyList<MeasureRes>>.NotFound("measure_not_found", "No measures found for the date.") : ServiceResult<IReadOnlyList<MeasureRes>>.Ok(measures);
+        var entities = await Set.AsNoTracking().Where(m => m.CollectPeriod == date.Date).ToListAsync();
+        var measures = entities.Select(ToDto).ToList();
+        return ServiceResult<IReadOnlyList<MeasureRes>>.Ok(measures);
     }
 
     public async Task<ServiceResult<IReadOnlyList<MeasureRes>>> GetByUserAsync(int userId)
     {
-        var measures = await Set.AsNoTracking().Where(m => m.UserId == userId).Select(m => ToDto(m)).ToListAsync();
-        return measures.Count == 0 ? ServiceResult<IReadOnlyList<MeasureRes>>.NotFound("measure_not_found", "No measures found for the user.") : ServiceResult<IReadOnlyList<MeasureRes>>.Ok(measures);
+        var entities = await Set.AsNoTracking().Where(m => m.UserId == userId).ToListAsync();
+        var measures = entities.Select(ToDto).ToList();
+        return ServiceResult<IReadOnlyList<MeasureRes>>.Ok(measures);
     }
 }
 
@@ -53,14 +55,15 @@ public sealed class DetailExerciseService(SlowFitContext context) : CrudServiceB
     protected override string EntityName => "Detail exercise";
     protected override int GetId(DetailExercise entity) => entity.DetailExerciseId;
     protected override int GetDtoId(DetailExerciseRes dto) => dto.DetailExerciseId;
-    protected override DetailExerciseRes ToDto(DetailExercise entity) => new() { DetailExerciseId = entity.DetailExerciseId, NRipetition = entity.NRipetition, Pause = entity.Pause, Phase = entity.Phase, Series = entity.Series, ExerciseId = entity.ExerciseId, TrainingId = entity.TrainingId };
-    protected override DetailExercise CreateEntity(DetailExerciseRes dto) => new() { NRipetition = dto.NRipetition, Pause = dto.Pause, Phase = dto.Phase, Series = dto.Series, ExerciseId = dto.ExerciseId, TrainingId = dto.TrainingId };
+    protected override DetailExerciseRes ToDto(DetailExercise entity) => new() { DetailExerciseId = entity.DetailExerciseId, NRipetition = entity.NRipetition, Pause = entity.Pause, Phase = entity.Phase, Series = entity.Series, Kg = entity.Kg, ExerciseId = entity.ExerciseId, TrainingId = entity.TrainingId };
+    protected override DetailExercise CreateEntity(DetailExerciseRes dto) => new() { NRipetition = dto.NRipetition, Pause = dto.Pause, Phase = dto.Phase, Series = dto.Series, Kg = dto.Kg, ExerciseId = dto.ExerciseId, TrainingId = dto.TrainingId };
     protected override void UpdateEntity(DetailExercise entity, DetailExerciseRes dto)
     {
         entity.NRipetition = dto.NRipetition;
         entity.Pause = dto.Pause;
         entity.Phase = dto.Phase;
         entity.Series = dto.Series;
+        entity.Kg = dto.Kg;
         entity.ExerciseId = dto.ExerciseId;
         entity.TrainingId = dto.TrainingId;
     }
@@ -68,7 +71,8 @@ public sealed class DetailExerciseService(SlowFitContext context) : CrudServiceB
 
     public async Task<ServiceResult<IReadOnlyList<DetailExerciseRes>>> GetByTrainingAsync(int trainingId)
     {
-        var details = await Set.AsNoTracking().Where(d => d.TrainingId == trainingId).Select(d => ToDto(d)).ToListAsync();
-        return details.Count == 0 ? ServiceResult<IReadOnlyList<DetailExerciseRes>>.NoContent() : ServiceResult<IReadOnlyList<DetailExerciseRes>>.Ok(details);
+        var entities = await Set.AsNoTracking().Where(d => d.TrainingId == trainingId).ToListAsync();
+        var details = entities.Select(ToDto).ToList();
+        return ServiceResult<IReadOnlyList<DetailExerciseRes>>.Ok(details);
     }
 }

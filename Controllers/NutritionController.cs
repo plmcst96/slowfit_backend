@@ -43,7 +43,6 @@ namespace slowfit.Controllers
                     }).ToList()
                 }).ToListAsync();
 
-            if (nutritionList.Count == 0) return NoContent();
             return Ok(nutritionList);
         }
 
@@ -55,7 +54,7 @@ namespace slowfit.Controllers
                 .FirstOrDefaultAsync(n => n.NutritionId == id && n.ExpirationDate == null);
 
             if (nutrition == null)
-                return NotFound(new { message = "Piano nutrizionale non trovato" });
+                return Ok(new { });
 
             var result = new NutritionRes
             {
@@ -93,14 +92,6 @@ namespace slowfit.Controllers
                 .Include(n => n.NutritionMeals).ThenInclude(nm => nm.Meal)
                 .Where(n => n.UserId == userId && n.ExpirationDate == null)
                 .ToListAsync();
-
-            if (nutritions.Count == 0)
-            {
-                return NotFound(new
-                {
-                    message = $"Nessun piano nutrizionale attivo trovato per l'utente {userId}."
-                });
-            }
 
             var result = nutritions.Select(n => new NutritionRes
             {
@@ -218,31 +209,8 @@ namespace slowfit.Controllers
             nutrition.CreationDate = request.CreationDate.Date;
             nutrition.ExpirationDate = request.ExpirationDate?.Date;
 
-            // 🔄 Aggiorniamo i collegamenti NutritionMeal
-            var incomingMeals = request.Meals.ToDictionary(m => m.MealId);
-
-            // ✅ Aggiorna o rimuovi collegamenti esistenti
-            var toRemove = new List<NutritionMeal>();
-            foreach (var existing in nutrition.NutritionMeals)
-            {
-                if (incomingMeals.TryGetValue(existing.MealId, out var updated))
-                {
-                    existing.DayId = updated.DayId; // aggiorna DayId
-                    incomingMeals.Remove(existing.MealId);
-                }
-                else
-                {
-                    toRemove.Add(existing); // rimuovi se non più presente
-                }
-            }
-
-            foreach (var remove in toRemove)
-            {
-                nutrition.NutritionMeals.Remove(remove);
-            }
-
-            // ➕ Aggiungi nuovi collegamenti
-            foreach (var newMeal in incomingMeals.Values)
+            nutrition.NutritionMeals.Clear();
+            foreach (var newMeal in request.Meals)
             {
                 nutrition.NutritionMeals.Add(new NutritionMeal
                 {

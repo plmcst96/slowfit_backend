@@ -1,9 +1,13 @@
 using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using slowfit.DBModels;
 
 #nullable disable
 
 namespace slowfit.Migrations
 {
+    [DbContext(typeof(SlowFitContext))]
+    [Migration("20260615090000_IncreasePasswordLength")]
     public partial class IncreasePasswordLength : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)

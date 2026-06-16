@@ -46,13 +46,11 @@ public sealed class IngredientService(SlowFitContext context) : CrudServiceBase<
         }
 
         var normalizedName = name.Trim().ToLower();
-        var ingredients = await Set.AsNoTracking()
+        var entities = await Set.AsNoTracking()
             .Where(i => i.Name.ToLower().Contains(normalizedName))
-            .Select(i => ToDto(i))
             .ToListAsync();
+        var ingredients = entities.Select(ToDto).ToList();
 
-        return ingredients.Count == 0
-            ? ServiceResult<IReadOnlyList<IngredientRes>>.NotFound("ingredient_not_found", "No ingredients found.")
-            : ServiceResult<IReadOnlyList<IngredientRes>>.Ok(ingredients);
+        return ServiceResult<IReadOnlyList<IngredientRes>>.Ok(ingredients);
     }
 }

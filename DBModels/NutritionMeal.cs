@@ -9,9 +9,9 @@ public partial class NutritionMeal
 
     public int MealId { get; set; }
 
-    public int? DayId { get; set; }
+    public int DayId { get; set; }
 
-    public virtual DayWeek? Day { get; set; }
+    public virtual DayWeek Day { get; set; } = null!;
 
     public virtual Meal Meal { get; set; } = null!;
 

@@ -57,6 +57,8 @@ public partial class SlowFitContext : DbContext
 
     public virtual DbSet<Measure> Measures { get; set; }
 
+    public virtual DbSet<NotificationsFire> NotificationsFires { get; set; }
+
     public virtual DbSet<Nutrition> Nutritions { get; set; }
 
     public virtual DbSet<NutritionMeal> NutritionMeals { get; set; }
@@ -66,6 +68,10 @@ public partial class SlowFitContext : DbContext
     public virtual DbSet<PaymentType> PaymentTypes { get; set; }
 
     public virtual DbSet<Product> Products { get; set; }
+
+    public virtual DbSet<ProgressNutrition> ProgressNutritions { get; set; }
+
+    public virtual DbSet<ProgressTraining> ProgressTrainings { get; set; }
 
     public virtual DbSet<Question> Questions { get; set; }
 
@@ -284,6 +290,9 @@ public partial class SlowFitContext : DbContext
             entity.Property(e => e.ExerciseId).HasColumnName("exerciseId");
             entity.Property(e => e.NRipetition).HasColumnName("nRipetition");
             entity.Property(e => e.Pause).HasColumnName("pause");
+            entity.Property(e => e.Kg)
+                .HasColumnType("decimal(5, 0)")
+                .HasColumnName("kg");
             entity.Property(e => e.Phase)
                 .HasMaxLength(50)
                 .IsUnicode(false)
@@ -477,6 +486,23 @@ public partial class SlowFitContext : DbContext
                 .HasConstraintName("FK_measure_user");
         });
 
+        modelBuilder.Entity<NotificationsFire>(entity =>
+        {
+            entity.ToTable("NotificationsFire");
+
+            entity.Property(e => e.Body).IsRequired();
+            entity.Property(e => e.CreatedAt)
+                .HasColumnType("datetime")
+                .HasDefaultValueSql("(getdate())");
+            entity.Property(e => e.ReceiverRole).HasMaxLength(20);
+            entity.Property(e => e.Title).HasMaxLength(255);
+
+            entity.HasOne(d => d.Receiver).WithMany(p => p.NotificationsFires)
+                .HasForeignKey(d => d.ReceiverId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_NotificationsFire_User");
+        });
+
         modelBuilder.Entity<Nutrition>(entity =>
         {
             entity.ToTable("nutrition");
@@ -504,7 +530,7 @@ public partial class SlowFitContext : DbContext
 
         modelBuilder.Entity<NutritionMeal>(entity =>
         {
-            entity.HasKey(e => new { e.NutritionId, e.MealId }).HasName("PK_NutritionMeals");
+            entity.HasKey(e => new { e.NutritionId, e.MealId, e.DayId }).HasName("PK_NutritionMeals");
 
             entity.ToTable("nutritionMeal");
 
@@ -606,6 +632,41 @@ public partial class SlowFitContext : DbContext
                 .HasForeignKey(d => d.TypePlanId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_product_typePlan");
+        });
+
+        modelBuilder.Entity<ProgressNutrition>(entity =>
+        {
+            entity.ToTable("progressNutrition");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.AvarageKcal).HasColumnName("avarageKcal");
+            entity.Property(e => e.CreatedAt)
+                .HasColumnType("datetime2")
+                .HasColumnName("createdAt");
+            entity.Property(e => e.DateOfProgress)
+                .HasColumnType("date")
+                .HasColumnName("dateOfProgress");
+            entity.Property(e => e.NutritionId).HasColumnName("nutritionId");
+            entity.Property(e => e.ProgressValue).HasColumnName("progressValue");
+            entity.Property(e => e.UserId).HasColumnName("userId");
+        });
+
+        modelBuilder.Entity<ProgressTraining>(entity =>
+        {
+            entity.ToTable("progressTraining");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.AvarageKg).HasColumnName("avarageKg");
+            entity.Property(e => e.CreatedAt)
+                .HasColumnType("datetime2")
+                .HasColumnName("createdAt");
+            entity.Property(e => e.DateOfProgress)
+                .HasColumnType("date")
+                .HasColumnName("dateOfProgress");
+            entity.Property(e => e.Duration).HasColumnName("duration");
+            entity.Property(e => e.ProgressValue).HasColumnName("progressValue");
+            entity.Property(e => e.TrainingId).HasColumnName("trainingId");
+            entity.Property(e => e.UserId).HasColumnName("userId");
         });
 
         modelBuilder.Entity<Question>(entity =>
@@ -783,6 +844,9 @@ public partial class SlowFitContext : DbContext
                 .HasMaxLength(50)
                 .IsUnicode(false)
                 .HasColumnName("email");
+            entity.Property(e => e.AccessFailedCount).HasColumnName("AccessFailedCount");
+            entity.Property(e => e.ConcurrencyStamp).HasColumnName("ConcurrencyStamp");
+            entity.Property(e => e.FcmToken).HasColumnName("FcmToken");
             entity.Property(e => e.FirstName)
                 .HasMaxLength(50)
                 .IsUnicode(false)
@@ -790,9 +854,12 @@ public partial class SlowFitContext : DbContext
             entity.Property(e => e.ImageProfile)
                 .IsUnicode(false)
                 .HasColumnName("imageProfile");
+            entity.Property(e => e.LockoutEnabled).HasColumnName("LockoutEnabled");
+            entity.Property(e => e.LockoutEnd).HasColumnName("LockoutEnd");
             entity.Property(e => e.Password)
                 .IsUnicode(false)
                 .HasColumnName("password");
+            entity.Property(e => e.PasswordHash).HasColumnName("PasswordHash");
             entity.Property(e => e.Phone)
                 .HasMaxLength(50)
                 .IsUnicode(false)
@@ -809,6 +876,7 @@ public partial class SlowFitContext : DbContext
                 .HasMaxLength(50)
                 .IsUnicode(false)
                 .HasColumnName("surname");
+            entity.Property(e => e.SecurityStamp).HasColumnName("SecurityStamp");
             entity.Property(e => e.ZipCode).HasColumnName("zipCode");
 
             entity.HasOne(d => d.Role).WithMany(p => p.Users)

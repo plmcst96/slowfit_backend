@@ -47,25 +47,21 @@ public sealed class ExerciseService(SlowFitContext context) : CrudServiceBase<Ex
 
     public async Task<ServiceResult<IReadOnlyList<ExerciseRes>>> GetByLocationAsync(int locationId)
     {
-        var exercises = await Set.AsNoTracking()
+        var entities = await Set.AsNoTracking()
             .Where(e => e.LocationTrainingId == locationId)
-            .Select(e => ToDto(e))
             .ToListAsync();
+        var exercises = entities.Select(ToDto).ToList();
 
-        return exercises.Count == 0
-            ? ServiceResult<IReadOnlyList<ExerciseRes>>.NotFound("exercise_not_found", "No exercises found for the given location.")
-            : ServiceResult<IReadOnlyList<ExerciseRes>>.Ok(exercises);
+        return ServiceResult<IReadOnlyList<ExerciseRes>>.Ok(exercises);
     }
 
     public async Task<ServiceResult<IReadOnlyList<ExerciseRes>>> GetByTypeTrainingAsync(int trainingTypeId)
     {
-        var exercises = await Set.AsNoTracking()
+        var entities = await Set.AsNoTracking()
             .Where(e => e.TypeTrainingId == trainingTypeId)
-            .Select(e => ToDto(e))
             .ToListAsync();
+        var exercises = entities.Select(ToDto).ToList();
 
-        return exercises.Count == 0
-            ? ServiceResult<IReadOnlyList<ExerciseRes>>.NotFound("exercise_not_found", "No exercises found for the given training type.")
-            : ServiceResult<IReadOnlyList<ExerciseRes>>.Ok(exercises);
+        return ServiceResult<IReadOnlyList<ExerciseRes>>.Ok(exercises);
     }
 }

@@ -37,8 +37,6 @@ namespace slowfit.Controllers
                 })];
 
 
-                if (trainingList.Count == 0) return NoContent();
-
                 return Ok(trainingList);
             }
             catch (Exception)
@@ -53,7 +51,7 @@ namespace slowfit.Controllers
             try
             {
                 var training = _slowFitContext.Training.Where(t => t.TrainingId == id).FirstOrDefault();
-                if (training == null) return NotFound();
+                if (training == null) return Ok(new { });
                 if (!User.CanAccessUser(training.UserId)) return Forbid();
                 return Ok(training);
             }
@@ -71,7 +69,6 @@ namespace slowfit.Controllers
             try
             {
                 var filteredTrainings = _slowFitContext.Training.Where(t => t.CreationDate == date.Date).ToList();
-                if (filteredTrainings.Count == 0) return NotFound($"No trainings found for this {date}.");
                 return Ok(filteredTrainings);
             }
             catch (Exception)
@@ -93,7 +90,6 @@ namespace slowfit.Controllers
                 var filteredTrainings = _slowFitContext.Training
                 .Where(t => t.CreationDate >= startDate.Date && t.CreationDate <= endDate.Date)
                 .ToList();
-                if (filteredTrainings.Count == 0) return NotFound($"No trainings found in this date range {startDate} to {endDate}.");
                 return Ok(filteredTrainings);
             }
             catch (Exception) {
@@ -114,9 +110,6 @@ namespace slowfit.Controllers
                     .Include(t => t.DetailExercises)
                     .Where(t => t.UserId == userId)
                     .ToList();
-
-                if (userTrainings.Count == 0)
-                    return NotFound($"No trainings found for user {userId}.");
 
                 var trainingList = userTrainings.Select(t => new TrainingRes
                 {
@@ -178,6 +171,7 @@ namespace slowfit.Controllers
                         Pause = de.Pause,
                         Phase = de.Phase,
                         Series = de.Series,
+                        Kg = de.Kg,
                         TrainingId = training.TrainingId // associa al training
                     };
                     training.DetailExercises.Add(detail);
@@ -202,7 +196,8 @@ namespace slowfit.Controllers
                         NRipetition = de.NRipetition,
                         Pause = de.Pause,
                         Phase = de.Phase,
-                        Series = de.Series
+                        Series = de.Series,
+                        Kg = de.Kg
                     }).ToList()
                 };
 
@@ -251,6 +246,7 @@ namespace slowfit.Controllers
                     Pause = de.Pause,
                     Phase = de.Phase,
                     Series = de.Series,
+                    Kg = de.Kg,
                     TrainingId = training.TrainingId // molto importante
                 }).ToList();
 

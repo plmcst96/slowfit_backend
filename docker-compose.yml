@@ -6,11 +6,13 @@ services:
       - "5051:5051"
     environment:
       ASPNETCORE_ENVIRONMENT: Development
-      Kestrel__Endpoints__Http__Url: "http://0.0.0.0:5052"
       ConnectionStrings__dbConnectionString: "Server=slowfit-sql,1433;Database=SlowFit;User Id=sa;Password=Slowfit123!;TrustServerCertificate=True;"
       JwtConfiguration__Key: "dev-only-change-this-jwt-signing-key-32chars"
       JwtConfiguration__Issuer: "slowfit-api"
       JwtConfiguration__Audience: "slowfit-client"
+      Firebase__ServiceAccountPath: "/app/firebase-service-account.json"
+    volumes:
+      - /Users/cristina/Desktop/firebase-service-account.json:/app/firebase-service-account.json:ro
     depends_on:
       - slowfit-sql
   slowfit-sql:

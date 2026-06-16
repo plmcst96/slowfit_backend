@@ -140,6 +140,7 @@ namespace slowfit
             });
 
             builder.Services.AddAuthorization();
+            builder.Services.AddHttpClient();
             builder.Services.AddScoped<IRoleService, RoleService>();
             builder.Services.AddScoped<ICrudService<TypeNutritionRes>, TypeNutritionService>();
             builder.Services.AddScoped<ICrudService<CategoryOfDayRes>, CategoryOfDayService>();
@@ -166,6 +167,9 @@ namespace slowfit
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IQuizService, QuizService>();
             builder.Services.AddScoped<IAppointmentService, AppointmentService>();
+            builder.Services.AddScoped<INotificationService, NotificationService>();
+            builder.Services.AddScoped<IProgressTrainingService, ProgressTrainingService>();
+            builder.Services.AddScoped<IProgressNutritionService, ProgressNutritionService>();
 
             var app = builder.Build();
 

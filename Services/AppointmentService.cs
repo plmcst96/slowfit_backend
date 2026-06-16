@@ -8,7 +8,7 @@ namespace slowfit.Services;
 public interface IAppointmentService : ICrudService<AppointmentRes>
 {
     Task<ServiceResult<AppointmentResponse>> GetResponseByIdAsync(int id);
-    Task<ServiceResult<AppointmentRes>> GetByUserAsync(int userId);
+    Task<ServiceResult<IReadOnlyList<AppointmentResponse>>> GetByUserAsync(int userId);
     Task<ServiceResult<IReadOnlyList<AppointmentRes>>> GetByDateAsync(DateTime date);
     Task<ServiceResult<IReadOnlyList<AppointmentResponse>>> GetByPtAsync(int ptId);
 }
@@ -36,25 +36,26 @@ public sealed class AppointmentService(SlowFitContext context) : CrudServiceBase
     public async Task<ServiceResult<AppointmentResponse>> GetResponseByIdAsync(int id)
     {
         var appointment = await ResponseQuery().FirstOrDefaultAsync(a => a.AppointmentId == id);
-        return appointment == null ? ServiceResult<AppointmentResponse>.NotFound("appointment_not_found", "Appointment not found.") : ServiceResult<AppointmentResponse>.Ok(appointment);
+        return appointment == null ? ServiceResult<AppointmentResponse>.Ok(default!) : ServiceResult<AppointmentResponse>.Ok(appointment);
     }
 
-    public async Task<ServiceResult<AppointmentRes>> GetByUserAsync(int userId)
+    public async Task<ServiceResult<IReadOnlyList<AppointmentResponse>>> GetByUserAsync(int userId)
     {
-        var appointment = await Set.AsNoTracking().Where(a => a.UserId == userId).Select(a => ToDto(a)).FirstOrDefaultAsync();
-        return appointment == null ? ServiceResult<AppointmentRes>.NotFound("appointment_not_found", "Appointment not found for the user.") : ServiceResult<AppointmentRes>.Ok(appointment);
+        var appointments = await ResponseQuery().Where(a => a.UserId == userId).ToListAsync();
+        return ServiceResult<IReadOnlyList<AppointmentResponse>>.Ok(appointments);
     }
 
     public async Task<ServiceResult<IReadOnlyList<AppointmentRes>>> GetByDateAsync(DateTime date)
     {
-        var appointments = await Set.AsNoTracking().Where(a => a.Date.Date == date.Date).Select(a => ToDto(a)).ToListAsync();
-        return appointments.Count == 0 ? ServiceResult<IReadOnlyList<AppointmentRes>>.NoContent() : ServiceResult<IReadOnlyList<AppointmentRes>>.Ok(appointments);
+        var entities = await Set.AsNoTracking().Where(a => a.Date.Date == date.Date).ToListAsync();
+        var appointments = entities.Select(ToDto).ToList();
+        return ServiceResult<IReadOnlyList<AppointmentRes>>.Ok(appointments);
     }
 
     public async Task<ServiceResult<IReadOnlyList<AppointmentResponse>>> GetByPtAsync(int ptId)
     {
         var appointments = await ResponseQuery().Where(a => a.PtId == ptId).ToListAsync();
-        return appointments.Count == 0 ? ServiceResult<IReadOnlyList<AppointmentResponse>>.NoContent() : ServiceResult<IReadOnlyList<AppointmentResponse>>.Ok(appointments);
+        return ServiceResult<IReadOnlyList<AppointmentResponse>>.Ok(appointments);
     }
 
     private IQueryable<AppointmentResponse> ResponseQuery() =>

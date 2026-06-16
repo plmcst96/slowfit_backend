@@ -35,11 +35,27 @@ public partial class User
 
     public string? Phone { get; set; }
 
+    public string? FcmToken { get; set; }
+
+    public string? PasswordHash { get; set; }
+
+    public string? SecurityStamp { get; set; }
+
+    public string? ConcurrencyStamp { get; set; }
+
+    public int AccessFailedCount { get; set; }
+
+    public bool LockoutEnabled { get; set; }
+
+    public DateTimeOffset? LockoutEnd { get; set; }
+
     public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
 
     public virtual ICollection<Billing> Billings { get; set; } = new List<Billing>();
 
     public virtual ICollection<Measure> Measures { get; set; } = new List<Measure>();
+
+    public virtual ICollection<NotificationsFire> NotificationsFires { get; set; } = new List<NotificationsFire>();
 
     public virtual ICollection<Nutrition> Nutritions { get; set; } = new List<Nutrition>();
 
