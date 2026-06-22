@@ -18,7 +18,16 @@ public sealed class TrainingService(SlowFitContext context) : ITrainingService
 
         try
         {
-            var trainingList = await _context.Training.Select(t => new TrainingRes
+            var query = _context.Training.AsQueryable();
+
+            // Un PT vede solo gli allenamenti collegati ai propri clienti; il superadmin vede tutto.
+            if (!user.IsSuperAdmin())
+            {
+                var ptId = user.GetUserId();
+                query = query.Where(t => _context.Users.Any(u => u.UserId == t.UserId && u.PtId == ptId));
+            }
+
+            var trainingList = await query.Select(t => new TrainingRes
             {
                 EndDate = DateTime.Now,
                 TrainingId = t.TrainingId,
@@ -44,7 +53,7 @@ public sealed class TrainingService(SlowFitContext context) : ITrainingService
             var training = await _context.Training.FirstOrDefaultAsync(t => t.TrainingId == id);
             if (training == null)
                 return ServiceResult<object>.Ok(new { });
-            if (!user.CanAccessUser(training.UserId))
+            if (!await CanManageClientPlanAsync(user, training.UserId))
                 return ServiceResult<object>.Forbidden("forbidden", "Non hai i permessi per eseguire questa operazione.");
             return ServiceResult<object>.Ok(training);
         }
@@ -90,7 +99,7 @@ public sealed class TrainingService(SlowFitContext context) : ITrainingService
 
     public async Task<ServiceResult<IReadOnlyList<TrainingRes>>> GetByUserAsync(ClaimsPrincipal user, int userId)
     {
-        if (!user.CanAccessUser(userId))
+        if (!await CanManageClientPlanAsync(user, userId))
             return Forbidden<IReadOnlyList<TrainingRes>>();
 
         try
@@ -129,11 +138,14 @@ public sealed class TrainingService(SlowFitContext context) : ITrainingService
 
     public async Task<ServiceResult<object>> CreateAsync(ClaimsPrincipal user, TrainingRes request)
     {
-        if (!user.CanAccessUser(request.UserId))
+        if (!await CanManageClientPlanAsync(user, request.UserId))
             return ServiceResult<object>.Forbidden("forbidden", "Non hai i permessi per eseguire questa operazione.");
 
         try
         {
+            // Se a creare l'allenamento è un PT lo si attribuisce a lui; se è l'utente stesso, ptId resta null (auto-creato).
+            var assigningPtId = user.GetRoleId() == 2 ? user.GetUserId() : null;
+
             // 1️⃣ Creazione del training
             var training = new Training
             {
@@ -143,6 +155,7 @@ public sealed class TrainingService(SlowFitContext context) : ITrainingService
                 Duration = request.Duration,
                 CreationDate = request.CreationDate.Date,
                 EndDate = request.EndDate.Date,
+                PtId = assigningPtId,
                 DetailExercises = new List<DetailExercise>()
             };
 
@@ -205,7 +218,7 @@ public sealed class TrainingService(SlowFitContext context) : ITrainingService
 
         if (training == null)
             return ServiceResult<object>.NotFound("training_not_found", "Allenamento non trovato.");
-        if (!user.CanAccessUser(training.UserId) || !user.CanAccessUser(updatedTraining.UserId))
+        if (!await CanManageClientPlanAsync(user, training.UserId) || !await CanManageClientPlanAsync(user, updatedTraining.UserId))
             return ServiceResult<object>.Forbidden("forbidden", "Non hai i permessi per eseguire questa operazione.");
 
         // Aggiorno i campi principali
@@ -252,7 +265,7 @@ public sealed class TrainingService(SlowFitContext context) : ITrainingService
 
         if (training == null)
             return ServiceResult<object>.NotFound("training_not_found", "Allenamento non trovato.");
-        if (!user.CanAccessUser(training.UserId))
+        if (!await CanManageClientPlanAsync(user, training.UserId))
             return ServiceResult<object>.Forbidden("forbidden", "Non hai i permessi per eseguire questa operazione.");
 
         try
@@ -272,6 +285,16 @@ public sealed class TrainingService(SlowFitContext context) : ITrainingService
         {
             return ServiceResult<object>.Error("training_delete_failed", "Non è stato possibile eliminare l'allenamento. Riprova.");
         }
+    }
+
+    // superadmin -> tutti; PT -> solo i propri clienti; utente -> solo se stesso.
+    private async Task<bool> CanManageClientPlanAsync(ClaimsPrincipal user, int clientUserId)
+    {
+        if (user.IsSuperAdmin()) return true;
+        var actingId = user.GetUserId();
+        if (user.GetRoleId() == 2) // PersonalTrainerRoleId
+            return await _context.Users.AnyAsync(u => u.UserId == clientUserId && u.PtId == actingId);
+        return actingId == clientUserId;
     }
 
     private static ServiceResult<T> Forbidden<T>() =>

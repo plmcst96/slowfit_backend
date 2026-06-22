@@ -9,7 +9,7 @@
 *.user
 *.userosscache
 *.sln.docstates
-
+.env
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
@@ -361,3 +361,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+# Variabili d'ambiente locali con segreti (Mailgun, ecc.)
+.env
+.env.*

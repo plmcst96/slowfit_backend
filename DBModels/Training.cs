@@ -19,9 +19,13 @@ public partial class Training
 
     public int? Duration { get; set; }
 
+    public int? PtId { get; set; }
+
     public virtual ICollection<DetailExercise> DetailExercises { get; set; } = new List<DetailExercise>();
 
     public virtual LevelTraining? Level { get; set; }
 
     public virtual TypeTrainig Type { get; set; } = null!;
+
+    public virtual PersonalTrainer? Pt { get; set; }
 }

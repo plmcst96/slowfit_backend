@@ -22,7 +22,13 @@ public sealed class UserRegistrationService(SlowFitContext slowFitContext) : IUs
             return ServiceResult<UserRegisterResponse>.BadRequest("invalid_registration", "Compila tutti i campi obbligatori.");
         }
 
-        if (await _slowFitContext.Users.AnyAsync(u => u.Email == request.Email))
+        if (request.RoleId == 2) // PersonalTrainerRoleId: i PT si creano dall'endpoint dedicato slowFit/pt
+        {
+            return ServiceResult<UserRegisterResponse>.BadRequest("invalid_role", "I personal trainer non possono essere registrati da questo endpoint.");
+        }
+
+        if (await _slowFitContext.Users.AnyAsync(u => u.Email == request.Email)
+            || await _slowFitContext.PersonalTrainers.AnyAsync(p => p.Email == request.Email))
         {
             return ServiceResult<UserRegisterResponse>.Conflict("email_in_use", "Questa email è già registrata.");
         }

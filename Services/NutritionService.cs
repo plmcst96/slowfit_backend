@@ -1,4 +1,6 @@
+using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
+using slowfit.Auth;
 using slowfit.DBModels;
 using slowfit.DTORequest;
 
@@ -8,11 +10,20 @@ public sealed class NutritionService(SlowFitContext context) : INutritionService
 {
     private readonly SlowFitContext _context = context;
 
-    public async Task<ServiceResult<IReadOnlyList<NutritionRes>>> GetAllAsync()
+    public async Task<ServiceResult<IReadOnlyList<NutritionRes>>> GetAllAsync(ClaimsPrincipal user)
     {
-        var nutritions = await _context.Nutritions
+        var query = _context.Nutritions
             .AsNoTracking()
-            .Where(n => n.ExpirationDate == null)
+            .Where(n => n.ExpirationDate == null);
+
+        // Un PT vede solo i piani collegati ai propri clienti; il superadmin vede tutto.
+        if (!user.IsSuperAdmin())
+        {
+            var ptId = user.GetUserId();
+            query = query.Where(n => n.User != null && n.User.PtId == ptId);
+        }
+
+        var nutritions = await query
             .Include(n => n.NutritionMeals).ThenInclude(nm => nm.Meal)
             .ToListAsync();
 
@@ -20,7 +31,7 @@ public sealed class NutritionService(SlowFitContext context) : INutritionService
         return ServiceResult<IReadOnlyList<NutritionRes>>.Ok(result);
     }
 
-    public async Task<ServiceResult<NutritionRes>> GetByIdAsync(int id)
+    public async Task<ServiceResult<NutritionRes>> GetByIdAsync(ClaimsPrincipal user, int id)
     {
         var nutrition = await _context.Nutritions
             .AsNoTracking()
@@ -30,11 +41,17 @@ public sealed class NutritionService(SlowFitContext context) : INutritionService
         if (nutrition == null)
             return ServiceResult<NutritionRes>.Ok(default!);
 
+        if (!await CanManageClientPlanAsync(user, nutrition.UserId))
+            return ServiceResult<NutritionRes>.Forbidden("forbidden", "Non hai i permessi per eseguire questa operazione.");
+
         return ServiceResult<NutritionRes>.Ok(ToRes(nutrition));
     }
 
-    public async Task<ServiceResult<IReadOnlyList<NutritionRes>>> GetByUserAsync(int userId)
+    public async Task<ServiceResult<IReadOnlyList<NutritionRes>>> GetByUserAsync(ClaimsPrincipal user, int userId)
     {
+        if (!await CanManageClientPlanAsync(user, userId))
+            return ServiceResult<IReadOnlyList<NutritionRes>>.Forbidden("forbidden", "Non hai i permessi per eseguire questa operazione.");
+
         var nutritions = await _context.Nutritions
             .AsNoTracking()
             .Include(n => n.NutritionMeals).ThenInclude(nm => nm.Meal)
@@ -45,7 +62,7 @@ public sealed class NutritionService(SlowFitContext context) : INutritionService
         return ServiceResult<IReadOnlyList<NutritionRes>>.Ok(result);
     }
 
-    public async Task<ServiceResult<object>> CreateAsync(NutritionResPost request)
+    public async Task<ServiceResult<object>> CreateAsync(ClaimsPrincipal user, NutritionResPost request)
     {
         // Controllo base: request null
         if (request == null)
@@ -81,6 +98,9 @@ public sealed class NutritionService(SlowFitContext context) : INutritionService
         if (!typeExists)
             return ServiceResult<object>.BadRequest("nutrition_type_not_found", "Tipo nutrizione non trovato.");
 
+        // Se a creare il piano è un PT lo si attribuisce a lui; se è l'utente stesso, ptId resta null (auto-creato).
+        var assigningPtId = user.GetRoleId() == 2 ? user.GetUserId() : null;
+
         // Creazione oggetto Nutrition
         var nutrition = new Nutrition
         {
@@ -89,6 +109,7 @@ public sealed class NutritionService(SlowFitContext context) : INutritionService
             TotDailyCalories = request.TotDailyCalories,
             CreationDate = request.CreationDate.Date,
             ExpirationDate = request.ExpirationDate?.Date,
+            PtId = assigningPtId,
             NutritionMeals = [.. request.Meals.Select(m => new NutritionMeal
             {
                 MealId = m.MealId,
@@ -108,7 +129,7 @@ public sealed class NutritionService(SlowFitContext context) : INutritionService
         }
     }
 
-    public async Task<ServiceResult<object>> UpdateAsync(int id, NutritionResPost request)
+    public async Task<ServiceResult<object>> UpdateAsync(ClaimsPrincipal user, int id, NutritionResPost request)
     {
         var nutrition = await _context.Nutritions
             .Include(n => n.NutritionMeals)
@@ -116,6 +137,9 @@ public sealed class NutritionService(SlowFitContext context) : INutritionService
 
         if (nutrition == null)
             return ServiceResult<object>.NotFound("nutrition_not_found", "Piano nutrizionale non trovato.");
+
+        if (!await CanManageClientPlanAsync(user, nutrition.UserId))
+            return ServiceResult<object>.Forbidden("forbidden", "Non hai i permessi per eseguire questa operazione.");
 
         nutrition.TypeNutritionId = request.TypeNutritionId;
         nutrition.TotDailyCalories = request.TotDailyCalories;
@@ -143,7 +167,7 @@ public sealed class NutritionService(SlowFitContext context) : INutritionService
         }
     }
 
-    public async Task<ServiceResult<object>> DeleteAsync(int id)
+    public async Task<ServiceResult<object>> DeleteAsync(ClaimsPrincipal user, int id)
     {
         var nutrition = await _context.Nutritions
             .Include(n => n.NutritionMeals)
@@ -151,6 +175,9 @@ public sealed class NutritionService(SlowFitContext context) : INutritionService
 
         if (nutrition == null)
             return ServiceResult<object>.NotFound("nutrition_not_found", "Piano nutrizionale non trovato.");
+
+        if (!await CanManageClientPlanAsync(user, nutrition.UserId))
+            return ServiceResult<object>.Forbidden("forbidden", "Non hai i permessi per eseguire questa operazione.");
 
         try
         {
@@ -164,6 +191,17 @@ public sealed class NutritionService(SlowFitContext context) : INutritionService
         {
             return ServiceResult<object>.Error("nutrition_delete_failed", "Non è stato possibile eliminare il piano nutrizionale. Riprova.");
         }
+    }
+
+    // superadmin -> tutti; PT -> solo i propri clienti; utente -> solo se stesso.
+    private async Task<bool> CanManageClientPlanAsync(ClaimsPrincipal user, int? clientUserId)
+    {
+        if (user.IsSuperAdmin()) return true;
+        if (clientUserId == null) return false;
+        var actingId = user.GetUserId();
+        if (user.GetRoleId() == 2) // PersonalTrainerRoleId
+            return await _context.Users.AnyAsync(u => u.UserId == clientUserId && u.PtId == actingId);
+        return actingId == clientUserId;
     }
 
     private static NutritionRes ToRes(Nutrition n) => new()

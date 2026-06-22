@@ -17,9 +17,13 @@ public partial class Nutrition
 
     public DateTime? CreationDate { get; set; }
 
+    public int? PtId { get; set; }
+
     public virtual ICollection<NutritionMeal> NutritionMeals { get; set; } = new List<NutritionMeal>();
 
     public virtual TypeNutrition TypeNutrition { get; set; } = null!;
 
     public virtual User? User { get; set; }
+
+    public virtual PersonalTrainer? Pt { get; set; }
 }

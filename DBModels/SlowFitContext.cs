@@ -67,6 +67,8 @@ public partial class SlowFitContext : DbContext
 
     public virtual DbSet<PaymentType> PaymentTypes { get; set; }
 
+    public virtual DbSet<PersonalTrainer> PersonalTrainers { get; set; }
+
     public virtual DbSet<Product> Products { get; set; }
 
     public virtual DbSet<ProgressNutrition> ProgressNutritions { get; set; }
@@ -150,6 +152,11 @@ public partial class SlowFitContext : DbContext
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_appointment_user");
+
+            entity.HasOne(d => d.Pt).WithMany(p => p.Appointments)
+                .HasForeignKey(d => d.PtId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_appointment_personalTrainer");
         });
 
         modelBuilder.Entity<AspNetRole>(entity =>
@@ -518,6 +525,8 @@ public partial class SlowFitContext : DbContext
             entity.Property(e => e.TypeNutritionId).HasColumnName("typeNutritionId");
             entity.Property(e => e.UserId).HasColumnName("userId");
 
+            entity.Property(e => e.PtId).HasColumnName("ptId");
+
             entity.HasOne(d => d.TypeNutrition).WithMany(p => p.Nutritions)
                 .HasForeignKey(d => d.TypeNutritionId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -526,6 +535,11 @@ public partial class SlowFitContext : DbContext
             entity.HasOne(d => d.User).WithMany(p => p.Nutritions)
                 .HasForeignKey(d => d.UserId)
                 .HasConstraintName("FK_nutrition_user");
+
+            entity.HasOne(d => d.Pt).WithMany(p => p.Nutritions)
+                .HasForeignKey(d => d.PtId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_nutrition_personalTrainer");
         });
 
         modelBuilder.Entity<NutritionMeal>(entity =>
@@ -771,6 +785,8 @@ public partial class SlowFitContext : DbContext
             entity.Property(e => e.TypeId).HasColumnName("typeId");
             entity.Property(e => e.UserId).HasColumnName("userId");
 
+            entity.Property(e => e.PtId).HasColumnName("ptId");
+
             entity.HasOne(d => d.Level).WithMany(p => p.Training)
                 .HasForeignKey(d => d.LevelId)
                 .HasConstraintName("FK_training_levelTraining");
@@ -779,6 +795,11 @@ public partial class SlowFitContext : DbContext
                 .HasForeignKey(d => d.TypeId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_training_typeTrainig");
+
+            entity.HasOne(d => d.Pt).WithMany(p => p.Trainings)
+                .HasForeignKey(d => d.PtId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_training_personalTrainer");
         });
 
         modelBuilder.Entity<TypeNutrition>(entity =>
@@ -869,6 +890,16 @@ public partial class SlowFitContext : DbContext
                 .IsUnicode(false)
                 .HasColumnName("province");
             entity.Property(e => e.PtId).HasColumnName("ptId");
+            entity.Property(e => e.RefreshTokenExpiresAt)
+                .HasColumnType("datetime2")
+                .HasColumnName("refreshTokenExpiresAt");
+            entity.Property(e => e.RefreshTokenHash)
+                .HasMaxLength(256)
+                .IsUnicode(false)
+                .HasColumnName("refreshTokenHash");
+            entity.Property(e => e.RefreshTokenRevokedAt)
+                .HasColumnType("datetime2")
+                .HasColumnName("refreshTokenRevokedAt");
             entity.Property(e => e.RoleId)
                 .HasDefaultValue(1)
                 .HasColumnName("roleId");
@@ -882,6 +913,96 @@ public partial class SlowFitContext : DbContext
             entity.HasOne(d => d.Role).WithMany(p => p.Users)
                 .HasForeignKey(d => d.RoleId)
                 .HasConstraintName("FK_user_roleUser");
+
+            entity.HasOne(d => d.Pt).WithMany(p => p.Clients)
+                .HasForeignKey(d => d.PtId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_user_personalTrainer");
+        });
+
+        modelBuilder.Entity<PersonalTrainer>(entity =>
+        {
+            entity.HasKey(e => e.PtId);
+
+            entity.ToTable("personalTrainer");
+
+            entity.Property(e => e.PtId).HasColumnName("ptId");
+            entity.Property(e => e.Address)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasColumnName("address");
+            entity.Property(e => e.BirthDate)
+                .HasColumnType("date")
+                .HasColumnName("birthDate");
+            entity.Property(e => e.City)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasColumnName("city");
+            entity.Property(e => e.Country)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasColumnName("country");
+            entity.Property(e => e.Email)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasColumnName("email");
+            entity.Property(e => e.FcmToken).HasColumnName("FcmToken");
+            entity.Property(e => e.FirstName)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasColumnName("firstName");
+            entity.Property(e => e.FiscalCode)
+                .HasMaxLength(16)
+                .IsUnicode(false)
+                .HasColumnName("fiscalCode");
+            entity.Property(e => e.ImageProfile)
+                .IsUnicode(false)
+                .HasColumnName("imageProfile");
+            entity.Property(e => e.Password)
+                .IsUnicode(false)
+                .HasColumnName("password");
+            entity.Property(e => e.PasswordSetupTokenExpiresAt)
+                .HasColumnType("datetime2")
+                .HasColumnName("passwordSetupTokenExpiresAt");
+            entity.Property(e => e.PasswordSetupTokenHash)
+                .HasMaxLength(256)
+                .IsUnicode(false)
+                .HasColumnName("passwordSetupTokenHash");
+            entity.Property(e => e.PecEmail)
+                .HasMaxLength(100)
+                .IsUnicode(false)
+                .HasColumnName("pecEmail");
+            entity.Property(e => e.Phone)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasColumnName("phone");
+            entity.Property(e => e.Province)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasColumnName("province");
+            entity.Property(e => e.RefreshTokenExpiresAt)
+                .HasColumnType("datetime2")
+                .HasColumnName("refreshTokenExpiresAt");
+            entity.Property(e => e.RefreshTokenHash)
+                .HasMaxLength(256)
+                .IsUnicode(false)
+                .HasColumnName("refreshTokenHash");
+            entity.Property(e => e.RefreshTokenRevokedAt)
+                .HasColumnType("datetime2")
+                .HasColumnName("refreshTokenRevokedAt");
+            entity.Property(e => e.SdiCode)
+                .HasMaxLength(7)
+                .IsUnicode(false)
+                .HasColumnName("sdiCode");
+            entity.Property(e => e.Surname)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .HasColumnName("surname");
+            entity.Property(e => e.VatNumber)
+                .HasMaxLength(20)
+                .IsUnicode(false)
+                .HasColumnName("vatNumber");
+            entity.Property(e => e.ZipCode).HasColumnName("zipCode");
         });
 
         OnModelCreatingPartial(modelBuilder);

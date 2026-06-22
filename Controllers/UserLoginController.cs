@@ -20,13 +20,16 @@ public class UserLoginController(IAuthService authService) : ControllerBase
         return this.ToActionResult(result);
     }
 
-    [Authorize]
     [HttpPost("refresh")]
-    public async Task<IActionResult> Refresh()
+    public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequest request)
     {
-        var userId = User.GetUserId();
-        if (userId == null) return this.ApiUnauthorized();
-        return this.ToActionResult(await _authService.RefreshAsync(userId.Value));
+        return this.ToActionResult(await _authService.RefreshAsync(request));
+    }
+
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout([FromBody] RefreshTokenRequest request)
+    {
+        return this.ToActionResult(await _authService.LogoutAsync(request));
     }
 
     [Authorize]
@@ -35,6 +38,6 @@ public class UserLoginController(IAuthService authService) : ControllerBase
     {
         var userId = User.GetUserId();
         if (userId == null) return this.ApiUnauthorized();
-        return this.ToActionResult(await _authService.GetMeAsync(userId.Value));
+        return this.ToActionResult(await _authService.GetMeAsync(userId.Value, User.GetRoleId()));
     }
 }

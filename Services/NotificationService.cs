@@ -24,13 +24,23 @@ public sealed class NotificationService(SlowFitContext slowFitContext, IHttpClie
             return ServiceResult<object>.BadRequest("invalid_fcm_token", "Token notifiche non valido.");
         }
 
+        var token = request.FcmToken.Trim();
+
         var user = await _slowFitContext.Users.FirstOrDefaultAsync(u => u.UserId == request.UserId);
-        if (user == null)
+        if (user != null)
+        {
+            user.FcmToken = token;
+            await _slowFitContext.SaveChangesAsync();
+            return ServiceResult<object>.NoContent();
+        }
+
+        var trainer = await _slowFitContext.PersonalTrainers.FirstOrDefaultAsync(p => p.PtId == request.UserId);
+        if (trainer == null)
         {
             return ServiceResult<object>.NotFound("user_not_found", "Utente non trovato.");
         }
 
-        user.FcmToken = request.FcmToken.Trim();
+        trainer.FcmToken = token;
         await _slowFitContext.SaveChangesAsync();
         return ServiceResult<object>.NoContent();
     }
@@ -74,6 +84,47 @@ public sealed class NotificationService(SlowFitContext slowFitContext, IHttpClie
         return await CreateAndSendAsync(request.ClientId, "client", request.Title, request.Body, data);
     }
 
+    public async Task<ServiceResult<NotificationSendResponse>> NotifyAdminAsync(AdminNotificationRequest request)
+    {
+        if (request == null || string.IsNullOrWhiteSpace(request.Title) || string.IsNullOrWhiteSpace(request.Body))
+        {
+            return ServiceResult<NotificationSendResponse>.BadRequest("invalid_notification", "Titolo e messaggio della notifica sono obbligatori.");
+        }
+
+        var adminIds = await _slowFitContext.Users
+            .Where(u => u.RoleId == 3) // SuperAdminRoleId
+            .Select(u => u.UserId)
+            .ToListAsync();
+
+        if (adminIds.Count == 0)
+        {
+            return ServiceResult<NotificationSendResponse>.NotFound("admin_not_found", "Nessun amministratore disponibile.");
+        }
+
+        var data = ToStringDictionary(request.Data);
+        data["type"] = "to_admin";
+        if (request.SenderId > 0) data["senderId"] = request.SenderId.ToString();
+
+        NotificationSendResponse? lastResponse = null;
+        var anyPushSent = false;
+        foreach (var adminId in adminIds)
+        {
+            var result = await CreateAndSendAsync(adminId, "admin", request.Title, request.Body, data);
+            if (result.IsSuccess && result.Value != null)
+            {
+                lastResponse = result.Value;
+                anyPushSent |= result.Value.PushSent;
+            }
+        }
+
+        return ServiceResult<NotificationSendResponse>.Ok(new NotificationSendResponse
+        {
+            NotificationId = lastResponse?.NotificationId ?? 0,
+            PushSent = anyPushSent,
+            Message = $"Notifica inviata a {adminIds.Count} amministratore/i."
+        });
+    }
+
     public async Task<ServiceResult<NotificationsResponse>> GetByUserAsync(int userId)
     {
         var notifications = await _slowFitContext.NotificationsFires
@@ -113,15 +164,31 @@ public sealed class NotificationService(SlowFitContext slowFitContext, IHttpClie
 
     private async Task<ServiceResult<NotificationSendResponse>> CreateAndSendAsync(int receiverId, string receiverRole, string title, string body, IReadOnlyDictionary<string, string> data)
     {
-        var receiver = await _slowFitContext.Users.FirstOrDefaultAsync(u => u.UserId == receiverId);
-        if (receiver == null)
+        // Il destinatario può essere un personal trainer (tabella personalTrainer) oppure
+        // un cliente o un superadmin (entrambi nella tabella user).
+        string? receiverFcmToken;
+        if (receiverRole == "trainer")
         {
-            return ServiceResult<NotificationSendResponse>.NotFound("receiver_not_found", "Destinatario della notifica non trovato.");
+            var trainer = await _slowFitContext.PersonalTrainers.FirstOrDefaultAsync(p => p.PtId == receiverId);
+            if (trainer == null)
+            {
+                return ServiceResult<NotificationSendResponse>.NotFound("receiver_not_found", "Destinatario della notifica non trovato.");
+            }
+            receiverFcmToken = trainer.FcmToken;
+        }
+        else
+        {
+            var receiver = await _slowFitContext.Users.FirstOrDefaultAsync(u => u.UserId == receiverId);
+            if (receiver == null)
+            {
+                return ServiceResult<NotificationSendResponse>.NotFound("receiver_not_found", "Destinatario della notifica non trovato.");
+            }
+            receiverFcmToken = receiver.FcmToken;
         }
 
         var notification = new NotificationsFire
         {
-            ReceiverId = receiver.UserId,
+            ReceiverId = receiverId,
             ReceiverRole = receiverRole,
             Title = title.Trim(),
             Body = body.Trim(),
@@ -132,7 +199,7 @@ public sealed class NotificationService(SlowFitContext slowFitContext, IHttpClie
         _slowFitContext.NotificationsFires.Add(notification);
         await _slowFitContext.SaveChangesAsync();
 
-        var (pushSent, message) = await SendFirebasePushAsync(receiver.FcmToken, notification.Title, notification.Body, data);
+        var (pushSent, message) = await SendFirebasePushAsync(receiverFcmToken, notification.Title, notification.Body, data);
         return ServiceResult<NotificationSendResponse>.Ok(new NotificationSendResponse
         {
             NotificationId = notification.Id,

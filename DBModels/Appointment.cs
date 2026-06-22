@@ -20,4 +20,6 @@ public partial class Appointment
     public string? CallUrl { get; set; }
 
     public virtual User User { get; set; } = null!;
+
+    public virtual PersonalTrainer Pt { get; set; } = null!;
 }

@@ -188,9 +188,11 @@ namespace slowfit
             builder.Services.AddScoped<IMeasureService, MeasureService>();
             builder.Services.AddScoped<IDetailExerciseService, DetailExerciseService>();
             builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<IPersonalTrainerService, PersonalTrainerService>();
             builder.Services.AddScoped<IQuizService, QuizService>();
             builder.Services.AddScoped<IAppointmentService, AppointmentService>();
             builder.Services.AddScoped<INotificationService, NotificationService>();
+            builder.Services.AddScoped<IEmailService, EmailService>();
             builder.Services.AddScoped<IProgressTrainingService, ProgressTrainingService>();
             builder.Services.AddScoped<IProgressNutritionService, ProgressNutritionService>();
             builder.Services.AddScoped<INutritionService, NutritionService>();

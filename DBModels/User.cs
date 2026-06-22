@@ -37,6 +37,12 @@ public partial class User
 
     public string? FcmToken { get; set; }
 
+    public string? RefreshTokenHash { get; set; }
+
+    public DateTime? RefreshTokenExpiresAt { get; set; }
+
+    public DateTime? RefreshTokenRevokedAt { get; set; }
+
     public string? PasswordHash { get; set; }
 
     public string? SecurityStamp { get; set; }
@@ -64,4 +70,6 @@ public partial class User
     public virtual ICollection<ResponseQuiz> ResponseQuizzes { get; set; } = new List<ResponseQuiz>();
 
     public virtual RoleUser? Role { get; set; }
+
+    public virtual PersonalTrainer? Pt { get; set; }
 }

@@ -11,6 +11,8 @@ public interface INotificationService
 
     Task<ServiceResult<NotificationSendResponse>> NotifyClientByTrainerAsync(TrainerToClientNotificationRequest request);
 
+    Task<ServiceResult<NotificationSendResponse>> NotifyAdminAsync(AdminNotificationRequest request);
+
     Task<ServiceResult<NotificationsResponse>> GetByUserAsync(int userId);
 
     Task<ServiceResult<object>> DeleteAsync(int notificationId, int requesterId);

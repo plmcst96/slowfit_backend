@@ -27,6 +27,14 @@ public class NotificationController(INotificationService notificationService) : 
         return this.ToActionResult(await _notificationService.NotifyClientByTrainerAsync(request));
     }
 
+    [HttpPost("to-admin")]
+    public async Task<IActionResult> NotifyAdmin([FromBody] AdminNotificationRequest request)
+    {
+        if (request == null) return this.ApiBadRequest("invalid_notification", "I dati della notifica sono obbligatori.");
+        request.SenderId = User.GetUserId() ?? 0;
+        return this.ToActionResult(await _notificationService.NotifyAdminAsync(request));
+    }
+
     [HttpGet("{userId}")]
     public async Task<IActionResult> GetByUser(int userId)
     {

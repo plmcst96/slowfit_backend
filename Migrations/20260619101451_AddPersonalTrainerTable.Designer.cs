@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using slowfit.DBModels;
 
@@ -11,9 +12,11 @@ using slowfit.DBModels;
 namespace slowfit.Migrations
 {
     [DbContext(typeof(SlowFitContext))]
-    partial class SlowFitContextModelSnapshot : ModelSnapshot
+    [Migration("20260619101451_AddPersonalTrainerTable")]
+    partial class AddPersonalTrainerTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -990,19 +993,10 @@ namespace slowfit.Migrations
                         .HasColumnName("imageProfile");
 
                     b.Property<string>("Password")
+                        .IsRequired()
                         .IsUnicode(false)
                         .HasColumnType("varchar(max)")
                         .HasColumnName("password");
-
-                    b.Property<DateTime?>("PasswordSetupTokenExpiresAt")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("passwordSetupTokenExpiresAt");
-
-                    b.Property<string>("PasswordSetupTokenHash")
-                        .HasMaxLength(256)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(256)")
-                        .HasColumnName("passwordSetupTokenHash");
 
                     b.Property<string>("PecEmail")
                         .HasMaxLength(100)
